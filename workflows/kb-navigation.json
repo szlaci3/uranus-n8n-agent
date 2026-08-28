@@ -1,0 +1,549 @@
+{
+  "name": "kb-navigation",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "page_path"
+            },
+            {
+              "name": "operation"
+            },
+            {
+              "name": "query"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -4000,
+        656
+      ],
+      "id": "cb417705-597d-4b57-84ef-3320144ac9cc",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -4000,
+        416
+      ],
+      "id": "ad3a4616-2296-483a-8cb8-c5c68964c5ba",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8cfaafcc-e723-4e06-b412-aa89885489b1",
+              "name": "operation",
+              "value": "read",
+              "type": "string"
+            },
+            {
+              "id": "389ffd2d-a0aa-45fe-a119-d32a2b81b45f",
+              "name": "page_path",
+              "value": "concepts/this-page-does-not-exist.md",
+              "type": "string"
+            },
+            {
+              "id": "7a83c2a6-2b39-4fca-ab34-70e06efea35a",
+              "name": "query",
+              "value": "dumb zone",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3808,
+        560
+      ],
+      "id": "5f4b0c34-1da4-4598-b8d1-fa159004bebd",
+      "name": "Manual test only — set request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const KB_ROOT = '/home/node/.n8n-files/Uranus/knowledge/cole-medin-knowledge-base';\nconst SOURCE_ROOT = 'knowledge/cole-medin-knowledge-base';\nconst MAX_BYTES = 131072;\nconst MAX_QUERY_CHARS = 120;\nconst RESULT_CAP = 5;\n\nconst input = $input.first().json;\nconst operationValue = input.operation ?? 'read';\n\nfunction fail(errorCode, message, extras = {}) {\n  return [{ json: {\n    status: 'error',\n    error_code: errorCode,\n    message,\n    operation: extras.operation ?? null,\n    kb_path: extras.kb_path ?? null,\n    source_path: extras.source_path ?? null,\n    query: extras.query ?? null,\n    _is_search: extras._is_search ?? false,\n    _can_read: false,\n  } }];\n}\n\nif (typeof operationValue !== 'string') {\n  return fail('INVALID_OPERATION', 'operation must be read or find.');\n}\nconst operation = operationValue.trim().toLowerCase();\nif (operation !== 'read' && operation !== 'find') {\n  return fail('INVALID_OPERATION', 'operation must be read or find.', { operation });\n}\n\nif (operation === 'find') {\n  if (typeof input.query !== 'string') {\n    return fail('INVALID_QUERY', 'query must be a string.', { operation, _is_search: true });\n  }\n  const query = input.query.trim();\n  if (!query) {\n    return fail('INVALID_QUERY', 'query must not be empty.', { operation, query, _is_search: true });\n  }\n  if (query.length > MAX_QUERY_CHARS) {\n    return fail('QUERY_TOO_LONG', `query must not exceed ${MAX_QUERY_CHARS} characters.`, { operation, query, _is_search: true });\n  }\n  if (/[\\u0000-\\u001F\\u007F]/.test(query)) {\n    return fail('INVALID_QUERY', 'query contains a forbidden control character.', { operation, query, _is_search: true });\n  }\n  return [{ json: {\n    status: 'validated', operation, method: 'keyword_literal', query,\n    result_cap: RESULT_CAP, max_bytes: MAX_BYTES,\n    search_glob: `${KB_ROOT}/{concepts,entities,sources}/**/*.md`,\n    _is_search: true, _can_read: false,\n  } }];\n}\n\nconst value = input.page_path;\nif (typeof value !== 'string') {\n  return fail('INVALID_INPUT', 'page_path must be a string.', { operation });\n}\nconst rawPath = value.trim();\nif (!rawPath) {\n  return fail('INVALID_INPUT', 'page_path must not be empty.', { operation });\n}\nif (rawPath.includes(String.fromCharCode(0))) {\n  return fail('INVALID_PATH', 'page_path contains a forbidden character.', { operation });\n}\nconst slashPath = rawPath.split(String.fromCharCode(92)).join('/');\nif (slashPath.startsWith('/') || /^[A-Za-z][A-Za-z0-9+.-]*:/.test(slashPath)) {\n  return fail('ABSOLUTE_PATH', 'page_path must be relative to the Cole KB root.', { operation });\n}\nif (!/^[A-Za-z0-9._/-]+$/.test(slashPath)) {\n  return fail('INVALID_PATH', 'page_path contains unsupported path characters.', { operation });\n}\nconst segments = slashPath.split('/');\nif (segments.includes('..')) {\n  return fail('PATH_TRAVERSAL', 'Parent-directory traversal is not allowed.', { operation });\n}\nconst canonicalPath = segments.filter((segment) => segment && segment !== '.').join('/');\nif (!canonicalPath) {\n  return fail('INVALID_INPUT', 'page_path does not identify a page.', { operation });\n}\nif (!canonicalPath.endsWith('.md')) {\n  return fail('NON_MARKDOWN', 'Only Markdown pages ending in .md may be read.', { operation, kb_path: canonicalPath });\n}\nconst outsidePrefixes = ['Uranus/', 'knowledge/', 'workspace/', 'home/'];\nif (outsidePrefixes.some((prefix) => canonicalPath.startsWith(prefix))) {\n  return fail('OUTSIDE_KB', 'page_path must be relative to the Cole KB root.', { operation });\n}\nconst canonicalPage = /^(concepts|entities|sources)[/](?:[A-Za-z0-9][A-Za-z0-9_-]*[/])*[A-Za-z0-9][A-Za-z0-9_-]*[.]md$/;\nconst allowed = canonicalPath === 'SCHEMA.md'\n  || canonicalPath === 'index.md'\n  || canonicalPath === 'docs/query-guide.md'\n  || canonicalPage.test(canonicalPath);\nif (!allowed) {\n  return fail('DISALLOWED_PATH', 'The requested Markdown page is outside the read allowlist.', { operation, kb_path: canonicalPath });\n}\nconst absolutePath = `${KB_ROOT}/${canonicalPath}`;\nif (!absolutePath.startsWith(`${KB_ROOT}/`)) {\n  return fail('OUTSIDE_KB', 'The resolved path is outside the Cole KB root.', { operation });\n}\nreturn [{ json: {\n  status: 'validated', operation, kb_path: canonicalPath,\n  source_path: `${SOURCE_ROOT}/${canonicalPath}`, absolute_path: absolutePath,\n  max_bytes: MAX_BYTES, _is_search: false, _can_read: true,\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3568,
+        704
+      ],
+      "id": "f884d959-d211-4b85-975b-d3daa0c9d98d",
+      "name": "Validate request"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "91c13598-e258-4218-a709-474fb8c4b75b",
+              "leftValue": "={{ $json._is_search }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "43df448b-0eae-4228-ab48-83f680423411",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "validated",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3344,
+        704
+      ],
+      "id": "2bad45e0-4c49-472c-976b-7f1d266626f0",
+      "name": "Keyword search?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "43c6e7fa-863e-4641-89ee-0e31b383db02",
+              "leftValue": "={{ $json._can_read }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3120,
+        864
+      ],
+      "id": "ad07085f-2532-4f9e-959e-88bfc92dba81",
+      "name": "Path approved?"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $json.absolute_path }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -2896,
+        784
+      ],
+      "id": "635fc5c3-3208-4e8b-bae1-c23c37817cc3",
+      "name": "Read approved KB Markdown",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const validation = $('Validate request').first().json;\nconst item = $input.first();\nfunction readError(errorCode, message) {\n  return [{ json: { status: 'error', error_code: errorCode, message, kb_path: validation.kb_path, source_path: validation.source_path, _can_extract: false } }];\n}\nif (typeof item.json.error === 'string') {\n  if (item.json.error.includes('No file(s) found')) return readError('NOT_FOUND', 'The approved KB page does not exist.');\n  return readError('READ_FAILED', 'The approved KB page could not be read.');\n}\nconst binary = item.binary?.data;\nconst bytes = Number(binary?.bytes);\nif (!binary || !Number.isSafeInteger(bytes) || bytes < 0) return readError('READ_FAILED', 'The file read did not return trustworthy size metadata.');\nif (bytes > validation.max_bytes) return readError('PAGE_TOO_LARGE', `The KB page exceeds the ${validation.max_bytes}-byte limit.`);\nreturn [{ json: { ...validation, status: 'ready', content_bytes: bytes, _can_extract: true }, binary: item.binary }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2672,
+        784
+      ],
+      "id": "679c94eb-061e-47d1-b088-61fe9510f51a",
+      "name": "Check file read and size"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "af69d6d5-30b2-44b6-aa8c-6d515680b072",
+              "leftValue": "={{ $json._can_extract }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2448,
+        784
+      ],
+      "id": "de9ef08e-51e2-43bc-a6a4-7c8cd5803f85",
+      "name": "Safe to decode?"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "destinationKey": "content",
+        "options": {
+          "encoding": "utf8",
+          "stripBOM": true,
+          "keepSource": "json"
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -2224,
+        704
+      ],
+      "id": "9c584c24-5726-43b6-9d03-3b9d2dcc95cb",
+      "name": "Decode Markdown as UTF-8",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const validation = $('Validate request').first().json;\nconst current = $input.first().json;\nfunction publicError(result) {\n  return [{ json: { status: 'error', error_code: result.error_code, message: result.message, kb_path: result.kb_path ?? null, source_path: result.source_path ?? null } }];\n}\nif (validation.status === 'error') return publicError(validation);\nconst checked = $('Check file read and size').first().json;\nif (checked.status === 'error') return publicError(checked);\nif (typeof current.error === 'string' || typeof current.content !== 'string') {\n  return publicError({ error_code: 'DECODE_FAILED', message: 'The KB page could not be decoded as UTF-8.', kb_path: validation.kb_path, source_path: validation.source_path });\n}\nif (current.content.includes('�')) {\n  return publicError({ error_code: 'INVALID_UTF8', message: 'The KB page contains invalid UTF-8 byte sequences.', kb_path: validation.kb_path, source_path: validation.source_path });\n}\nreturn [{ json: { status: 'success', kb_path: validation.kb_path, source_path: validation.source_path, content: current.content } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2000,
+        880
+      ],
+      "id": "25a95a62-edd8-4fe8-8081-860cb9e8bffd",
+      "name": "Return structured result"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $json.search_glob }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -3120,
+        544
+      ],
+      "id": "6811f94b-420a-48ad-a187-f78966b369f5",
+      "name": "Read scoped KB Markdown",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const KB_ROOT = '/home/node/.n8n-files/Uranus/knowledge/cole-medin-knowledge-base';\nconst SOURCE_ROOT = 'knowledge/cole-medin-knowledge-base';\nconst request = $('Validate request').first().json;\nconst items = $input.all();\nconst canonicalPage = /^(concepts|entities|sources)[/](?:[A-Za-z0-9][A-Za-z0-9_-]*[/])*[A-Za-z0-9][A-Za-z0-9_-]*[.]md$/;\nfunction fail(errorCode, message) {\n  return [{ json: { status: 'error', error_code: errorCode, message, method: request.method, query: request.query, result_cap: request.result_cap, candidates: [], _search_ready: false } }];\n}\nif (items.length === 0 || items.some((item) => typeof item.json.error === 'string')) {\n  return fail('SEARCH_READ_FAILED', 'The scoped KB pages could not be read for keyword matching.');\n}\nconst prepared = [];\nfor (const item of items) {\n  const binary = item.binary?.data;\n  const bytes = Number(binary?.bytes);\n  const directory = typeof binary?.directory === 'string' ? binary.directory.split(String.fromCharCode(92)).join('/') : '';\n  const fileName = typeof binary?.fileName === 'string' ? binary.fileName : '';\n  if (!binary || !Number.isSafeInteger(bytes) || bytes < 0 || !directory || !fileName) {\n    return fail('SEARCH_READ_FAILED', 'A scoped KB file did not return trustworthy path or size metadata.');\n  }\n  if (bytes > request.max_bytes) return fail('SEARCH_PAGE_TOO_LARGE', `A scoped KB page exceeds the ${request.max_bytes}-byte limit.`);\n  const absolutePath = `${directory.replace(/[/]+$/, '')}/${fileName}`;\n  const rootPrefix = `${KB_ROOT}/`;\n  if (!absolutePath.startsWith(rootPrefix)) return fail('SEARCH_SCOPE_VIOLATION', 'A keyword-search file resolved outside the Cole KB root.');\n  const kbPath = absolutePath.slice(rootPrefix.length);\n  if (!canonicalPage.test(kbPath)) return fail('SEARCH_SCOPE_VIOLATION', 'A keyword-search file was outside the canonical search allowlist.');\n  prepared.push({\n    json: { status: 'ready', method: request.method, query: request.query, result_cap: request.result_cap, kb_path: kbPath, source_path: `${SOURCE_ROOT}/${kbPath}`, content_bytes: bytes, _search_ready: true },\n    binary: item.binary,\n  });\n}\nreturn prepared;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2896,
+        544
+      ],
+      "id": "ce2fa775-2551-42f7-b18c-394af22c54e4",
+      "name": "Validate scoped search files"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "66360935-cdd5-46e0-9416-f9af9c627b74",
+              "leftValue": "={{ $json._search_ready }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2672,
+        544
+      ],
+      "id": "5a1d9f8c-37a5-45d3-805f-455f102b7c89",
+      "name": "Search files approved?"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "destinationKey": "content",
+        "options": {
+          "encoding": "utf8",
+          "stripBOM": true,
+          "keepSource": "json"
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -2448,
+        464
+      ],
+      "id": "1e280a39-d75c-420d-b154-47d4530db9a4",
+      "name": "Decode scoped Markdown as UTF-8",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const request = $('Validate request').first().json;\nconst items = $input.all();\nfunction publicError(errorCode, message) {\n  return [{ json: { status: 'error', error_code: errorCode, message, method: request.method ?? 'keyword_literal', query: request.query ?? null, result_cap: request.result_cap ?? 5, candidate_count: 0, candidates: [] } }];\n}\nif (request.status === 'error') return publicError(request.error_code, request.message);\nif (items.length === 0) return publicError('SEARCH_READ_FAILED', 'No scoped KB pages were available for keyword matching.');\nif (items.length === 1 && items[0].json.status === 'error') return publicError(items[0].json.error_code, items[0].json.message);\nconst foldedQuery = request.query.toLowerCase();\nconst matches = [];\nfor (const item of items) {\n  const current = item.json;\n  if (typeof current.error === 'string' || typeof current.content !== 'string') return publicError('SEARCH_DECODE_FAILED', 'A scoped KB page could not be decoded as UTF-8.');\n  if (current.content.includes('�')) return publicError('SEARCH_INVALID_UTF8', 'A scoped KB page contains invalid UTF-8 byte sequences.');\n  const matchAt = current.content.toLowerCase().indexOf(foldedQuery);\n  if (matchAt === -1) continue;\n  const before = Math.max(0, matchAt - 80);\n  const after = Math.min(current.content.length, matchAt + request.query.length + 120);\n  let snippet = current.content.slice(before, after).replace(/\\s+/g, ' ').trim();\n  if (snippet.length > 240) snippet = snippet.slice(0, 237).trimEnd() + '...';\n  if (before > 0) snippet = `...${snippet}`;\n  if (after < current.content.length && !snippet.endsWith('...')) snippet += '...';\n  matches.push({ kb_path: current.kb_path, source_path: current.source_path, snippet });\n}\nmatches.sort((left, right) => {\n  const leftIndex = left.kb_path.endsWith('/index.md') ? 1 : 0;\n  const rightIndex = right.kb_path.endsWith('/index.md') ? 1 : 0;\n  return leftIndex - rightIndex || left.kb_path.localeCompare(right.kb_path);\n});\nconst candidates = matches.slice(0, request.result_cap);\nif (candidates.length === 0) {\n  return [{ json: {\n    status: 'no_match', terminal: true, method: request.method, query: request.query, result_cap: request.result_cap,\n    candidate_count: 0, truncated: false, candidates: [],\n    message: 'No eligible KB page contains this literal query. Do not call find_kb_pages again or shorten, broaden, or rewrite the query. Report insufficient evidence.',\n  } }];\n}\nreturn [{ json: {\n  status: 'success', terminal: false, method: request.method, query: request.query, result_cap: request.result_cap,\n  candidate_count: candidates.length, truncated: matches.length > request.result_cap, candidates,\n  evidence_notice: 'Candidates are locators only. Read a candidate with read_kb_page before using it as evidence.',\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2224,
+        560
+      ],
+      "id": "1fbf96d9-c7cc-455c-981c-2f7ce77dd5ad",
+      "name": "Return keyword candidates"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Validate request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Manual test only — set request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual test only — set request": {
+      "main": [
+        [
+          {
+            "node": "Validate request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate request": {
+      "main": [
+        [
+          {
+            "node": "Keyword search?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keyword search?": {
+      "main": [
+        [
+          {
+            "node": "Read scoped KB Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Path approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Path approved?": {
+      "main": [
+        [
+          {
+            "node": "Read approved KB Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return structured result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read approved KB Markdown": {
+      "main": [
+        [
+          {
+            "node": "Check file read and size",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check file read and size": {
+      "main": [
+        [
+          {
+            "node": "Safe to decode?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Safe to decode?": {
+      "main": [
+        [
+          {
+            "node": "Decode Markdown as UTF-8",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return structured result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decode Markdown as UTF-8": {
+      "main": [
+        [
+          {
+            "node": "Return structured result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read scoped KB Markdown": {
+      "main": [
+        [
+          {
+            "node": "Validate scoped search files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate scoped search files": {
+      "main": [
+        [
+          {
+            "node": "Search files approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files approved?": {
+      "main": [
+        [
+          {
+            "node": "Decode scoped Markdown as UTF-8",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return keyword candidates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decode scoped Markdown as UTF-8": {
+      "main": [
+        [
+          {
+            "node": "Return keyword candidates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "nodeGroups": [],
+  "tags": []
+}

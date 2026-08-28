@@ -1,0 +1,17 @@
+# External dependency: obtain locally; do not publish from this repository.
+knowledge/cole-medin-knowledge-base/
+
+# n8n runtime and secrets
+.n8n/
+.env
+.env.*
+*.sqlite
+*.sqlite3
+
+# Unredacted source captures remain private.
+assets/raw/
+
+# Local/editor files
+.DS_Store
+Thumbs.db
+*.log
