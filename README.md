@@ -102,6 +102,13 @@ passed answer quality, grounding, and provenance with one Gemini action,
 establish a general retrieval replacement. The accepted workflow artifacts
 are unchanged.
 
+The follow-up [generalized one-call experiment](docs/generalized-one-call.md)
+is prepared as `workflows/miranda-one-call-generalized.json`. It scores the
+KB's existing canonical indexes deterministically, uses one scoped literal
+fallback only when needed, reads linked source evidence, and builds one
+bounded packet before Gemini. Static and local five-case validation pass; no
+live generalized answer result is claimed yet.
+
 ## Run locally
 
 The tested target was Docker-hosted n8n 2.26.4. The public exports intentionally contain no Gemini credential and no instance-specific binding between the chat tools and supporting workflow.
@@ -129,6 +136,8 @@ See [Local setup](docs/setup.md) for the complete procedure. Never place API key
 - The system has not been load-tested or designed for multi-tenant operation.
 - Imports require local credential selection and supporting-workflow rebinding.
 - Qwen3 8B did not satisfy the accepted Gemini retrieval and provenance contract.
+- The generalized one-call workflow has not completed its live multi-question
+  gate and remains experimental.
 
 ## Ownership and AI assistance
 

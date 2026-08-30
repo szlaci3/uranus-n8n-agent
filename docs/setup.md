@@ -136,7 +136,29 @@ Do not activate the pilot, add a Chat Trigger, substitute a model, broaden the
 question, or treat a smaller token count as success if grounding or provenance
 regresses.
 
-## 8. Validate the public artifacts
+## 8. Run the generalized one-call experiment
+
+This workflow is a separate experimental architecture and does not replace
+the accepted Miranda control or the frozen Q4 pilot.
+
+1. Import
+   [`workflows/miranda-one-call-generalized.json`](../workflows/miranda-one-call-generalized.json).
+2. Keep it inactive.
+3. Select the same Gemini credential and confirm
+   `models/gemini-3.5-flash`.
+4. Inspect the five fixed index paths, scoped fallback glob, page and packet
+   bounds, terminal `no_match` branch, and single model connection.
+5. Edit only the question string in `Manual test — set question` for each case
+   listed in [the generalized design](generalized-one-call.md).
+6. For supported cases, confirm one Gemini action and inspect selected paths,
+   packet contents, final answer, Sources, total tokens, and duration.
+7. For Kubernetes autoscaling, confirm terminal `no_match` and zero Gemini
+   actions.
+
+Do not activate the workflow or describe it as accepted until all five live
+cases pass.
+
+## 9. Validate the public artifacts
 
 From the repository root:
 
@@ -155,3 +177,14 @@ node scripts/validate-pilot-packet.mjs /absolute/path/to/knowledge/cole-medin-kn
 
 This reads the two frozen canonical pages locally and verifies the packet's
 claim, source evidence, route, and character bounds. It does not call Gemini.
+
+Validate the generalized reference selector and its embedded n8n Code-node
+logic against the same KB root:
+
+```bash
+node scripts/validate-generalized-retrieval.mjs /absolute/path/to/knowledge/cole-medin-knowledge-base
+node scripts/validate-generalized-workflow.mjs /absolute/path/to/knowledge/cole-medin-knowledge-base
+```
+
+Both must produce the same five routes. These commands read local Markdown
+only; they do not import n8n workflows or call Gemini.

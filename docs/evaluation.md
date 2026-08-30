@@ -114,6 +114,34 @@ total token usage, or roughly one twelfth of the control. This is a passed
 one-question experiment, not evidence that frozen deterministic routes
 generalize to arbitrary questions.
 
+## Prepared generalized one-call experiment
+
+The user authorized generalization after the Q4 pilot passed. The prepared
+`workflows/miranda-one-call-generalized.json` keeps retrieval model-free: it
+scores the KB's existing section indexes with fixed literal rules, falls back
+once to a scoped literal scan when no plausible index entry exists, reloads
+canonical pages and linked source records, and sends one bounded packet to one
+Gemini chain call. Terminal `no_match` returns without a model call.
+
+Local reference-code and embedded-workflow tests agree on all five initial
+cases. The three direct/synthesis questions select their required concept
+pages and linked sources in packets of 7,817–7,916 characters. The distinctive
+quoted Q4 phrase correctly bypasses broad `LLM` index matches, uses literal
+`dumb zone`, and builds a 6,094-character packet. Kubernetes cluster
+autoscaling returns terminal `no_match` with zero expected model actions.
+
+This proves deterministic selection and packet construction against the local
+KB snapshot. It does not prove n8n import/runtime behavior, Gemini answer
+quality, token usage, or general retrieval coverage. Those claims remain
+pending the live gate in [the generalized design](generalized-one-call.md).
+
+The first live generalized case now passes. `Why does chunking matter in RAG?`
+used `deterministic_index_score`, produced the expected 7,896-character packet
+with `concepts/chunking.md`, relevant `concepts/rag.md`, and two directly read
+linked source pages, then returned a grounded answer citing exactly those four
+paths. The run used 2,586 total tokens and completed in 4.906 seconds. Four
+live cases remain; this partial result does not close the generalized gate.
+
 ## Failure-driven changes
 
 ### Phantom citations

@@ -1,0 +1,423 @@
+{
+  "name": "miranda-one-call-generalized",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-1920, 0],
+      "id": "33ece8ae-1866-4bad-942c-e4f876a01de7",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { question: 'Why does chunking matter in RAG?' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-1696, 0],
+      "id": "24cc279f-a852-486b-a40d-5db79c0526eb",
+      "name": "Manual test — set question"
+    },
+    {
+      "parameters": {
+        "jsCode": "const KB_ROOT = '/home/node/.n8n-files/Uranus/knowledge/cole-medin-knowledge-base';\nconst SOURCE_ROOT = 'knowledge/cole-medin-knowledge-base';\nconst MAX_BYTES = 131072;\nconst INDEX_PATHS = ['concepts/index.md', 'entities/tools/index.md', 'entities/people/index.md', 'entities/organizations/index.md', 'sources/index.md'];\nconst input = $input.first().json;\nfunction fail(errorCode, message) { return [{ json: { status: 'error', error_code: errorCode, message, _indexes_ready: false } }]; }\nif (typeof input.question !== 'string') return fail('INVALID_QUESTION', 'question must be a string.');\nconst question = input.question.trim();\nif (!question) return fail('INVALID_QUESTION', 'question must not be empty.');\nif (question.length > 300) return fail('QUESTION_TOO_LONG', 'question must not exceed 300 characters.');\nif (/[\\u0000-\\u001F\\u007F]/.test(question)) return fail('INVALID_QUESTION', 'question contains a forbidden control character.');\nreturn INDEX_PATHS.map((kb_path, index_order) => ({ json: { status: 'validated', question, index_order, kb_path, source_path: `${SOURCE_ROOT}/${kb_path}`, absolute_path: `${KB_ROOT}/${kb_path}`, max_bytes: MAX_BYTES, _indexes_ready: true } }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-1472, 0],
+      "id": "78e904d9-64da-4167-87ae-c11e0c076156",
+      "name": "Validate question and emit fixed indexes"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [{ "id": "e5b6b670-a0ec-4943-a0bd-f6237fce53c2", "leftValue": "={{ $json._indexes_ready }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } }],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [-1248, 0],
+      "id": "891e82d0-2e91-41f7-ba18-1fc6da14efb4",
+      "name": "Index request approved?"
+    },
+    {
+      "parameters": { "fileSelector": "={{ $json.absolute_path }}", "options": {} },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [-1024, -96],
+      "id": "99305213-c6c2-484f-93b4-42f2695239ac",
+      "name": "Read fixed canonical indexes",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const KB_ROOT = '/home/node/.n8n-files/Uranus/knowledge/cole-medin-knowledge-base';\nconst manifest = $('Validate question and emit fixed indexes').all().map((item) => item.json);\nconst items = $input.all();\nfunction fail(errorCode, message) { return [{ json: { status: 'error', error_code: errorCode, message, _can_decode_indexes: false } }]; }\nif (manifest.length !== 5 || items.length !== 5 || items.some((item) => typeof item.json.error === 'string')) return fail('INDEX_READ_FAILED', 'Every fixed section index must be read successfully.');\nconst expected = new Map(manifest.map((entry) => [entry.absolute_path, entry]));\nconst seen = new Set();\nconst prepared = [];\nfor (const item of items) {\n  const binary = item.binary?.data; const bytes = Number(binary?.bytes);\n  const directory = typeof binary?.directory === 'string' ? binary.directory.split(String.fromCharCode(92)).join('/') : '';\n  const fileName = typeof binary?.fileName === 'string' ? binary.fileName : '';\n  if (!binary || !Number.isSafeInteger(bytes) || bytes < 0 || !directory || !fileName) return fail('INDEX_READ_FAILED', 'An index read returned untrustworthy metadata.');\n  const absolutePath = `${directory.replace(/[/]+$/, '')}/${fileName}`; const record = expected.get(absolutePath);\n  if (!record || !absolutePath.startsWith(`${KB_ROOT}/`) || seen.has(absolutePath)) return fail('INDEX_SCOPE_VIOLATION', 'An index read did not match the fixed manifest.');\n  if (bytes > record.max_bytes) return fail('INDEX_TOO_LARGE', `An index exceeds the ${record.max_bytes}-byte limit.`);\n  seen.add(absolutePath); prepared.push({ json: { ...record, status: 'ready', content_bytes: bytes, _can_decode_indexes: true }, binary: item.binary });\n}\nprepared.sort((left, right) => left.json.index_order - right.json.index_order); return prepared;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-800, -96],
+      "id": "cbd4e99b-395c-4f03-8ecf-d1564324c436",
+      "name": "Validate fixed index reads"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [{ "id": "2940b74b-81f9-4a1c-b6f5-c07145fb1ea4", "leftValue": "={{ $json._can_decode_indexes }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } }],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [-576, -96],
+      "id": "06ac11f1-b0e8-4426-8bd9-0082f51428af",
+      "name": "Indexes approved?"
+    },
+    {
+      "parameters": { "operation": "text", "destinationKey": "content", "options": { "encoding": "utf8", "stripBOM": true, "keepSource": "json" } },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [-352, -192],
+      "id": "7018d9a7-05f3-4d87-aef5-f5ac09de6e35",
+      "name": "Decode fixed indexes as UTF-8",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const KB_ROOT = '/home/node/.n8n-files/Uranus/knowledge/cole-medin-knowledge-base';\nconst SOURCE_ROOT = 'knowledge/cole-medin-knowledge-base';\nconst MAX_BYTES = 131072; const MAX_CANONICAL = 2; const MAX_QUERY_CHARS = 120;\nconst STOP = new Set(['a','an','and','are','as','at','be','by','cole','does','for','from','how','i','in','into','is','it','mean','means','of','on','or','recommend','says','that','the','their','to','what','when','why','with']);\nfunction norm(token) { let v = token.toLowerCase(); if (v.length > 5 && v.endsWith('ies')) v = `${v.slice(0,-3)}y`; else if (v.length > 4 && v.endsWith('ses')) v = v.slice(0,-1); else if (v.length > 4 && v.endsWith('s') && !v.endsWith('ss')) v = v.slice(0,-1); return v; }\nfunction toks(value) { return [...new Set((value.toLowerCase().match(/[\\p{L}\\p{N}]+/gu) ?? []).map(norm).filter((t) => t.length >= 2 && !STOP.has(t)))]; }\nfunction quoted(question) { return [...question.matchAll(/[“\\\"]([^”\\\"]+)[”\\\"]/g)][0]?.[1]?.trim() ?? null; }\nfunction fallbackQuery(question) { const q = quoted(question); if (q) return q.replace(/^the\\s+/i,'').trim(); return question.replace(/[?!.]+$/g,'').replace(/^what\\s+does\\s+cole\\s+recommend\\s+for\\s+/i,'').replace(/^what\\s+does\\s+cole\\s+(?:say|teach|mean)\\s+(?:about|by)?\\s*/i,'').trim(); }\nfunction canonical(indexPath, link) { return `${indexPath.slice(0,indexPath.lastIndexOf('/')+1)}${link}`.replaceAll('/./','/'); }\nconst decoded = $input.all(); const question = $('Manual test — set question').first().json.question.trim(); const qTokens = toks(question); const records = [];\nfor (const item of decoded) { const current = item.json; if (typeof current.error === 'string' || typeof current.content !== 'string' || current.content.includes('�')) return [{ json: { status:'error', error_code:'INDEX_DECODE_FAILED', message:'A fixed index could not be decoded as UTF-8.', _needs_fallback:false, _has_candidate:false } }]; for (const line of current.content.split(/\\r?\\n/)) { const m = line.match(/^\\s*-\\s+\\[([^\\]]+)]\\(([^)]+\\.md)\\)\\s*(?:-\\s*(.*))?$/); if (!m || m[2].includes('..') || /^(?:https?:|\\/)/i.test(m[2])) continue; const kb_path = canonical(current.kb_path,m[2]); if (!/^(?:concepts|entities\\/(?:tools|people|organizations)|sources)\\/[A-Za-z0-9][A-Za-z0-9_-]*\\.md$/.test(kb_path) || kb_path.endsWith('/index.md')) continue; records.push({kb_path,title:m[1],description:m[3]??'',index_path:current.kb_path}); } }\nconst quotedText = quoted(question)?.replace(/^the\\s+/i,'').trim().toLowerCase() ?? null; const quotedInIndex = quotedText ? records.some((r) => `${r.title} ${r.description}`.toLowerCase().includes(quotedText)) : true;\nconst ranked = (quotedInIndex ? records : []).map((r) => { const title=toks(r.title), slug=toks(r.kb_path.split('/').at(-1).replace(/\\.md$/,'').replaceAll('-',' ')), desc=new Set(toks(r.description)); const th=title.filter((t)=>qTokens.includes(t)).length, sh=slug.filter((t)=>qTokens.includes(t)).length, dh=qTokens.filter((t)=>desc.has(t)).length; const nq=toks(question).join(' '), nt=title.join(' '); const et=Boolean(nt&&nq.includes(nt)), es=slug.length===1&&qTokens.includes(slug[0]); return {...r,score:(et?30:0)+(es?30:0)+th*12+sh*8+dh*2,title_hits:th,slug_hits:sh,exact_title:et}; }).filter((r)=>r.score>=12&&(r.title_hits>0||r.slug_hits>0)).filter((r)=>!r.kb_path.startsWith('sources/')||r.exact_title).sort((a,b)=>b.score-a.score||b.title_hits-a.title_hits||b.slug_hits-a.slug_hits||a.kb_path.localeCompare(b.kb_path));\nconst selected = [...new Map(ranked.map((r)=>[r.kb_path,r])).values()].slice(0,MAX_CANONICAL);\nif (selected.length) return selected.map((r,route_index)=>({json:{status:'selected',question,selection_method:'deterministic_index_score',route_index,kb_path:r.kb_path,source_path:`${SOURCE_ROOT}/${r.kb_path}`,absolute_path:`${KB_ROOT}/${r.kb_path}`,score:r.score,index_path:r.index_path,max_bytes:MAX_BYTES,_needs_fallback:false,_has_candidate:true}}));\nconst query=fallbackQuery(question); if (!query || query.length>MAX_QUERY_CHARS) return [{json:{status:'error',error_code:'INVALID_FALLBACK_QUERY',message:`The deterministic literal query must contain 1-${MAX_QUERY_CHARS} characters.`,question,query,_needs_fallback:false,_has_candidate:false}}];\nreturn [{json:{status:'fallback',question,selection_method:'keyword_literal',query,result_cap:MAX_CANONICAL,max_bytes:MAX_BYTES,search_glob:`${KB_ROOT}/{concepts,entities,sources}/**/*.md`,_needs_fallback:true,_has_candidate:false}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-128, -192],
+      "id": "0d16ae5b-64a1-4807-8cba-5066bdfe427f",
+      "name": "Select deterministic index candidates"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [{ "id": "fd53ea73-cb87-4fda-a334-bef741ee0ae8", "leftValue": "={{ $json._needs_fallback }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } }],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [96, -192],
+      "id": "f9fa9a3d-11a5-4280-91f3-c6b869386623",
+      "name": "Literal fallback needed?"
+    },
+    {
+      "parameters": { "fileSelector": "={{ $json.search_glob }}", "options": {} },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [320, -400],
+      "id": "710b3a3e-d658-4c62-9be4-66d64ef71f79",
+      "name": "Read scoped fallback Markdown",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const KB_ROOT='/home/node/.n8n-files/Uranus/knowledge/cole-medin-knowledge-base'; const request=$('Select deterministic index candidates').first().json; const items=$input.all(); const allowed=/^(concepts|entities|sources)\\/(?:[A-Za-z0-9][A-Za-z0-9_-]*\\/)*[A-Za-z0-9][A-Za-z0-9_-]*\\.md$/; function fail(c,m){return [{json:{status:'error',error_code:c,message:m,question:request.question,query:request.query,_fallback_ready:false}}];} if(!items.length||items.some((i)=>typeof i.json.error==='string'))return fail('FALLBACK_READ_FAILED','The scoped fallback pages could not be read.'); const out=[]; for(const item of items){const b=item.binary?.data,bytes=Number(b?.bytes),dir=typeof b?.directory==='string'?b.directory.split(String.fromCharCode(92)).join('/'):'';const name=typeof b?.fileName==='string'?b.fileName:'';if(!b||!Number.isSafeInteger(bytes)||bytes<0||!dir||!name)return fail('FALLBACK_READ_FAILED','A fallback page returned untrustworthy metadata.');const abs=`${dir.replace(/[/]+$/,'')}/${name}`;if(!abs.startsWith(`${KB_ROOT}/`))return fail('FALLBACK_SCOPE_VIOLATION','A fallback page resolved outside the KB root.');const kb_path=abs.slice(KB_ROOT.length+1);if(!allowed.test(kb_path))return fail('FALLBACK_SCOPE_VIOLATION','A fallback page is outside the canonical allowlist.');if(bytes>request.max_bytes)return fail('FALLBACK_PAGE_TOO_LARGE',`A fallback page exceeds the ${request.max_bytes}-byte limit.`);out.push({json:{status:'ready',question:request.question,query:request.query,kb_path,source_path:`knowledge/cole-medin-knowledge-base/${kb_path}`,absolute_path:abs,content_bytes:bytes,_fallback_ready:true},binary:item.binary});}return out;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [544, -400],
+      "id": "6b7ee24b-50ff-4dab-af25-a89487412ad0",
+      "name": "Validate scoped fallback reads"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [{ "id": "13904291-9e20-45ec-a260-f2926d7a1a28", "leftValue": "={{ $json._fallback_ready }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } }],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [768, -400],
+      "id": "1e9092de-54ac-4e29-98ae-2f467839526e",
+      "name": "Fallback pages approved?"
+    },
+    {
+      "parameters": { "operation": "text", "destinationKey": "content", "options": { "encoding": "utf8", "stripBOM": true, "keepSource": "json" } },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [992, -496],
+      "id": "06063633-586e-41fe-90fa-c1e0f9df34c9",
+      "name": "Decode fallback Markdown as UTF-8",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const KB_ROOT='/home/node/.n8n-files/Uranus/knowledge/cole-medin-knowledge-base';const SOURCE_ROOT='knowledge/cole-medin-knowledge-base';const MAX_BYTES=131072;const request=$('Select deterministic index candidates').first().json;const matches=[];for(const item of $input.all()){const c=item.json;if(typeof c.error==='string'||typeof c.content!=='string'||c.content.includes('�'))return [{json:{status:'error',error_code:'FALLBACK_DECODE_FAILED',message:'A scoped fallback page could not be decoded as UTF-8.',question:request.question,query:request.query,_has_candidate:false}}];if(c.kb_path.endsWith('/index.md'))continue;if(c.content.toLowerCase().includes(request.query.toLowerCase()))matches.push(c.kb_path);}const selected=[...new Set(matches)].sort().slice(0,request.result_cap);if(!selected.length)return [{json:{status:'no_match',terminal:true,question:request.question,selection_method:'keyword_literal',query:request.query,candidates:[],_has_candidate:false}}];return selected.map((kb_path,route_index)=>({json:{status:'selected',question:request.question,selection_method:'keyword_literal',literal_query:request.query,route_index,kb_path,source_path:`${SOURCE_ROOT}/${kb_path}`,absolute_path:`${KB_ROOT}/${kb_path}`,max_bytes:MAX_BYTES,_has_candidate:true}}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1216, -496],
+      "id": "db458a18-4833-41d2-8dd0-61be1fa72df0",
+      "name": "Select literal fallback candidates"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [{ "id": "ae9af4bb-24bb-43bb-aa22-0b0466879b8d", "leftValue": "={{ $json._has_candidate }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } }],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1440, -496],
+      "id": "41de7526-a189-431c-9b5a-5df300f35cb9",
+      "name": "Fallback candidate found?"
+    },
+    {
+      "parameters": { "fileSelector": "={{ $json.absolute_path }}", "options": {} },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [1664, -192],
+      "id": "7709b9e0-b883-444f-ad65-41a2f999f64c",
+      "name": "Read selected canonical pages",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const KB_ROOT='/home/node/.n8n-files/Uranus/knowledge/cole-medin-knowledge-base';const SOURCE_ROOT='knowledge/cole-medin-knowledge-base';const MAX_BYTES=131072;const allowed=/^(?:concepts|entities\\/(?:tools|people|organizations)|sources)\\/[A-Za-z0-9][A-Za-z0-9_-]*\\.md$/;const items=$input.all();function fail(c,m){return [{json:{status:'error',error_code:c,message:m,_canonical_ready:false}}];}if(!items.length||items.length>2||items.some((i)=>typeof i.json.error==='string'))return fail('CANONICAL_READ_FAILED','One or two selected canonical pages must be read successfully.');const seen=new Set(),out=[];for(const item of items){const b=item.binary?.data,bytes=Number(b?.bytes),dir=typeof b?.directory==='string'?b.directory.split(String.fromCharCode(92)).join('/'):'';const name=typeof b?.fileName==='string'?b.fileName:'';if(!b||!Number.isSafeInteger(bytes)||bytes<0||!dir||!name)return fail('CANONICAL_READ_FAILED','A selected page returned untrustworthy metadata.');const abs=`${dir.replace(/[/]+$/,'')}/${name}`;if(!abs.startsWith(`${KB_ROOT}/`))return fail('CANONICAL_SCOPE_VIOLATION','A selected page resolved outside the KB root.');const kb_path=abs.slice(KB_ROOT.length+1);if(!allowed.test(kb_path)||seen.has(kb_path))return fail('CANONICAL_SCOPE_VIOLATION','Selected pages must be unique canonical evidence pages.');if(bytes>MAX_BYTES)return fail('CANONICAL_PAGE_TOO_LARGE',`A selected page exceeds the ${MAX_BYTES}-byte limit.`);seen.add(kb_path);out.push({json:{status:'ready',kb_path,source_path:`${SOURCE_ROOT}/${kb_path}`,absolute_path:abs,content_bytes:bytes,_canonical_ready:true},binary:item.binary});}out.sort((a,b)=>a.json.kb_path.localeCompare(b.json.kb_path));return out;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1888, -192],
+      "id": "7fc8a1e1-89cc-464d-8172-c4fc8747f067",
+      "name": "Validate selected canonical reads"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [{ "id": "33f48d28-67ef-44e5-83fb-0ae80ed83d92", "leftValue": "={{ $json._canonical_ready }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } }],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [2112, -192],
+      "id": "a92f5a6e-4f62-4655-9271-67ed1dfb3267",
+      "name": "Canonical pages approved?"
+    },
+    {
+      "parameters": { "operation": "text", "destinationKey": "content", "options": { "encoding": "utf8", "stripBOM": true, "keepSource": "json" } },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [2336, -288],
+      "id": "20f2fa4e-ccca-4525-88e8-b3972b1d6967",
+      "name": "Decode selected canonical pages",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const KB_ROOT='/home/node/.n8n-files/Uranus/knowledge/cole-medin-knowledge-base';const SOURCE_ROOT='knowledge/cole-medin-knowledge-base';const MAX_BYTES=131072,MAX_EXCERPT=5000;const STOP=new Set(['a','an','and','are','as','at','be','by','cole','does','for','from','how','i','in','into','is','it','mean','means','of','on','or','recommend','says','that','the','their','to','what','when','why','with']);function norm(t){let v=t.toLowerCase();if(v.length>5&&v.endsWith('ies'))v=`${v.slice(0,-3)}y`;else if(v.length>4&&v.endsWith('ses'))v=v.slice(0,-1);else if(v.length>4&&v.endsWith('s')&&!v.endsWith('ss'))v=v.slice(0,-1);return v;}function toks(v){return [...new Set((v.toLowerCase().match(/[\\p{L}\\p{N}]+/gu)??[]).map(norm).filter((t)=>t.length>=2&&!STOP.has(t)))];}function body(c){if(!c.startsWith('---'))return c.trim();const m=c.match(/^---\\r?\\n[\\s\\S]*?\\r?\\n---\\r?\\n/);return m?c.slice(m[0].length).trim():'';}function opening(c){const b=body(c),at=b.search(/\\r?\\n##\\s/);return (at===-1?b:b.slice(0,at)).trim();}function source(c,q){const b=body(c),at=b.search(/\\r?\\n## Sources\\s*\\r?\\n/);if(at===-1)return null;const out=[];for(const [order,line] of b.slice(at).split(/\\r?\\n/).entries()){const m=line.match(/^\\s*-\\s+\\[[^\\]]+]\\(\\.\\.\\/sources\\/([A-Za-z0-9][A-Za-z0-9_-]*\\.md)\\)/);if(!m)continue;const lt=new Set(toks(line));out.push({kb_path:`sources/${m[1]}`,line:line.trim(),overlap:q.filter((t)=>lt.has(t)).length,order});}out.sort((a,b)=>b.overlap-a.overlap||a.order-b.order||a.kb_path.localeCompare(b.kb_path));return out[0]??null;}const question=$('Manual test — set question').first().json.question.trim(),q=toks(question),items=$input.all(),canonical=[],requests=new Map();for(const item of items){const c=item.json;if(typeof c.error==='string'||typeof c.content!=='string'||c.content.includes('�'))return [{json:{status:'error',error_code:'CANONICAL_DECODE_FAILED',message:'A selected canonical page could not be decoded as UTF-8.',_has_sources:false,_packet_ready:false}}];const excerpt=opening(c.content);if(!excerpt||excerpt.length>MAX_EXCERPT)return [{json:{status:'error',error_code:'CANONICAL_EXCERPT_BOUND',message:`Canonical excerpt must contain 1-${MAX_EXCERPT} characters: ${c.kb_path}`,_has_sources:false,_packet_ready:false}}];const linked=c.kb_path.startsWith('sources/')?null:source(c.content,q);canonical.push({kb_path:c.kb_path,source_path:c.source_path,role:c.kb_path.startsWith('sources/')?'canonical_source':'canonical_page',excerpt:linked?`${excerpt}\\n\\n## Selected linked source\\n\\n${linked.line}`:excerpt,linked_sources:linked?[linked.kb_path]:[]});if(linked&&!requests.has(linked.kb_path))requests.set(linked.kb_path,{...linked,source_path:`${SOURCE_ROOT}/${linked.kb_path}`,absolute_path:`${KB_ROOT}/${linked.kb_path}`,max_bytes:MAX_BYTES});}const selection=$('Select deterministic index candidates').first().json;return [{json:{status:'ready',question,selection_method:selection._needs_fallback?'keyword_literal':'deterministic_index_score',literal_query:selection._needs_fallback?selection.query:null,canonical_evidence:canonical,source_requests:[...requests.values()],_has_sources:requests.size>0,_packet_ready:false}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2560, -288],
+      "id": "e22cd86e-5b36-45a0-818c-811a8d3ac335",
+      "name": "Prepare canonical evidence and source requests"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [{ "id": "647a6fa8-ff6d-480d-9322-4516e7178796", "leftValue": "={{ $json._has_sources }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } }],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [2784, -288],
+      "id": "19b6524a-6901-4b04-b859-a42daf95f969",
+      "name": "Linked sources required?"
+    },
+    {
+      "parameters": { "jsCode": "const prepared=$input.first().json;return prepared.source_requests.map((request,source_order)=>({json:{...request,source_order,_source_request:true}}));" },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3008, -432],
+      "id": "aa9847ec-8cf5-449b-b165-cba1a2fb9a14",
+      "name": "Emit linked source requests"
+    },
+    {
+      "parameters": { "fileSelector": "={{ $json.absolute_path }}", "options": {} },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [3232, -432],
+      "id": "698d9ac0-366b-43d2-badb-6cc7dd3edc24",
+      "name": "Read linked source pages",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const KB_ROOT='/home/node/.n8n-files/Uranus/knowledge/cole-medin-knowledge-base';const SOURCE_ROOT='knowledge/cole-medin-knowledge-base';const MAX_BYTES=131072;const prepared=$('Prepare canonical evidence and source requests').first().json,items=$input.all(),expected=new Map(prepared.source_requests.map((r)=>[r.absolute_path,r]));function fail(c,m){return [{json:{status:'error',error_code:c,message:m,_sources_ready:false}}];}if(items.length!==expected.size||items.some((i)=>typeof i.json.error==='string'))return fail('SOURCE_READ_FAILED','Every selected linked source must be read successfully.');const seen=new Set(),out=[];for(const item of items){const b=item.binary?.data,bytes=Number(b?.bytes),dir=typeof b?.directory==='string'?b.directory.split(String.fromCharCode(92)).join('/'):'';const name=typeof b?.fileName==='string'?b.fileName:'';if(!b||!Number.isSafeInteger(bytes)||bytes<0||!dir||!name)return fail('SOURCE_READ_FAILED','A linked source returned untrustworthy metadata.');const abs=`${dir.replace(/[/]+$/,'')}/${name}`,request=expected.get(abs);if(!request||!abs.startsWith(`${KB_ROOT}/`)||seen.has(abs))return fail('SOURCE_SCOPE_VIOLATION','A linked source did not match the frozen request set.');if(bytes>MAX_BYTES)return fail('SOURCE_PAGE_TOO_LARGE',`A source page exceeds the ${MAX_BYTES}-byte limit.`);seen.add(abs);out.push({json:{status:'ready',kb_path:request.kb_path,source_path:`${SOURCE_ROOT}/${request.kb_path}`,source_line:request.line,content_bytes:bytes,_sources_ready:true},binary:item.binary});}out.sort((a,b)=>a.json.kb_path.localeCompare(b.json.kb_path));return out;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3456, -432],
+      "id": "e90022b1-febd-4676-836e-9be7328cb803",
+      "name": "Validate linked source reads"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [{ "id": "3a583961-2924-44d6-b442-81e4f44dad37", "leftValue": "={{ $json._sources_ready }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } }],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [3680, -432],
+      "id": "a0bf8a23-c605-4c37-8296-dd4a2ddab5bd",
+      "name": "Linked sources approved?"
+    },
+    {
+      "parameters": { "operation": "text", "destinationKey": "content", "options": { "encoding": "utf8", "stripBOM": true, "keepSource": "json" } },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [3904, -528],
+      "id": "09c1d5d3-2997-4476-becb-72d859e5b498",
+      "name": "Decode linked sources as UTF-8",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const MAX_EVIDENCE=4,MAX_EXCERPT=5000,MAX_PACKET=20000;const prepared=$('Prepare canonical evidence and source requests').first().json;function fail(c,m){return [{json:{status:'error',error_code:c,message:m,_packet_ready:false}}];}function body(c){if(!c.startsWith('---'))return c.trim();const m=c.match(/^---\\r?\\n[\\s\\S]*?\\r?\\n---\\r?\\n/);return m?c.slice(m[0].length).trim():'';}function opening(c){const b=body(c),at=b.search(/\\r?\\n##\\s/);return (at===-1?b:b.slice(0,at)).trim();}const sourceEvidence=[];if(prepared.source_requests.length){const items=$input.all();if(items.length!==prepared.source_requests.length)return fail('SOURCE_ROUTE_MISMATCH','Decoded sources do not match the request set.');for(const item of items){const c=item.json;if(typeof c.error==='string'||typeof c.content!=='string'||c.content.includes('�'))return fail('SOURCE_DECODE_FAILED','A linked source could not be decoded as UTF-8.');const excerpt=opening(c.content);if(!excerpt||excerpt.length>MAX_EXCERPT)return fail('SOURCE_EXCERPT_BOUND',`Source excerpt must contain 1-${MAX_EXCERPT} characters: ${c.kb_path}`);sourceEvidence.push({kb_path:c.kb_path,source_path:c.source_path,role:'linked_source',excerpt,linked_sources:[]});}}const evidence=[...prepared.canonical_evidence,...sourceEvidence];if(!evidence.length||evidence.length>MAX_EVIDENCE)return fail('EVIDENCE_BOUND',`Evidence must contain 1-${MAX_EVIDENCE} unique pages.`);const paths=evidence.map((e)=>e.kb_path);if(new Set(paths).size!==paths.length)return fail('DUPLICATE_EVIDENCE','Evidence paths must be unique.');const packet={schema:'uranus-evidence-packet-2',question:prepared.question,selection_method:prepared.selection_method,literal_query:prepared.literal_query,route:paths,evidence,limits:{max_canonical_pages:2,max_evidence_pages:MAX_EVIDENCE,max_excerpt_chars_per_page:MAX_EXCERPT,max_packet_chars:MAX_PACKET}};const packetJson=JSON.stringify(packet,null,2);if(packetJson.length>MAX_PACKET)return fail('PACKET_BOUND_EXCEEDED',`The packet exceeds ${MAX_PACKET} characters.`);const modelPrompt=`You are Miranda. Answer the question using only the validated evidence packet below.\\n\\nRequirements:\\n- Answer every explicit clause directly and concisely.\\n- Use only packet evidence; do not add model knowledge.\\n- Cite only kb_path values present in packet.evidence.\\n- Preserve linked source provenance.\\n- End with a Sources section containing exact cited kb_path values as Markdown bullets.\\n- If the packet is insufficient, say so instead of guessing.\\n\\nQuestion:\\n${prepared.question}\\n\\nValidated evidence packet:\\n${packetJson}`;return [{json:{status:'success',question:prepared.question,selection_method:prepared.selection_method,literal_query:prepared.literal_query,evidence_packet:packet,evidence_packet_json:packetJson,packet_characters:packetJson.length,evidence_paths:paths,model_prompt:modelPrompt,_packet_ready:true}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [4128, -288],
+      "id": "ef92ea00-8a72-4236-a424-cdcf4d22b479",
+      "name": "Assemble generalized evidence packet"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [{ "id": "ae1cc824-e395-414a-aa49-62a256e000f7", "leftValue": "={{ $json._packet_ready }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } }],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [4352, -288],
+      "id": "4fdab809-0246-464f-a822-7e4c0b67f95d",
+      "name": "Generalized packet approved?"
+    },
+    {
+      "parameters": {
+        "jsCode": "const current=$input.first().json;if(current.status!=='success'||current._packet_ready!==true)return [ $input.first() ];const packet=current.evidence_packet,evidence=packet?.evidence;if(!Array.isArray(evidence)||evidence.length<1||evidence.length>4)return [{json:{status:'error',error_code:'EVIDENCE_BOUND',message:'Evidence must contain 1-4 pages.',_packet_ready:false}}];if(evidence.some((entry)=>typeof entry.excerpt!=='string'||entry.excerpt.length<1||entry.excerpt.length>5000))return [{json:{status:'error',error_code:'EVIDENCE_EXCERPT_BOUND',message:'Every final evidence excerpt must contain 1-5000 characters.',_packet_ready:false}}];const paths=evidence.map((entry)=>entry.kb_path);if(paths.some((path)=>typeof path!=='string')||new Set(paths).size!==paths.length||JSON.stringify(paths)!==JSON.stringify(packet.route))return [{json:{status:'error',error_code:'EVIDENCE_ROUTE_MISMATCH',message:'Final packet route must exactly match unique evidence paths.',_packet_ready:false}}];if(typeof current.evidence_packet_json!=='string'||current.evidence_packet_json.length!==current.packet_characters||current.packet_characters>20000)return [{json:{status:'error',error_code:'PACKET_BOUND_EXCEEDED',message:'Final serialized packet exceeds its 20000-character contract.',_packet_ready:false}}];return [ $input.first() ];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [4240, -288],
+      "id": "45f28bdf-4d73-4f91-8dfc-e096248d281c",
+      "name": "Validate final packet bounds"
+    },
+    {
+      "parameters": { "promptType": "define", "text": "={{ $json.model_prompt }}" },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [4576, -384],
+      "id": "2acd9294-532f-45af-af62-6eff988908fa",
+      "name": "One Gemini answer call"
+    },
+    {
+      "parameters": { "modelName": "models/gemini-3.5-flash", "options": {} },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [4576, -160],
+      "id": "dc72934f-9d5b-4c20-b5a0-7be2ea0f2318",
+      "name": "Gemini 3.5 Flash"
+    },
+    {
+      "parameters": {
+        "jsCode": "const packet=$('Assemble generalized evidence packet').first().json,result=$input.first().json;const answer=typeof result.text==='string'?result.text:(typeof result.output==='string'?result.output:null);if(!answer)return [{json:{status:'error',error_code:'MODEL_OUTPUT_MISSING',message:'The one-call model node returned no text answer.'}}];return [{json:{status:'success',question:packet.question,selection_method:packet.selection_method,literal_query:packet.literal_query,model:'models/gemini-3.5-flash',expected_model_actions_on_success:1,packet_characters:packet.packet_characters,evidence_paths:packet.evidence_paths,answer,measurement_note:'Confirm one Gemini action, provider token usage, duration, grounding, completeness, and Sources from this execution.'}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [4800, -384],
+      "id": "15eebbd8-d6a1-4a2b-8829-437274a1dfd0",
+      "name": "Return generalized answer and measurements"
+    },
+    {
+      "parameters": {
+        "jsCode": "const current=$input.first().json;return [{json:{status:'error',error_code:current.error_code??'GENERALIZED_VALIDATION_FAILED',message:current.message??'Deterministic validation stopped before Gemini.',model_called:false}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [4576, 96],
+      "id": "ce33e8c3-29e8-4a6e-a5c9-12f736e50a48",
+      "name": "Return structured generalized error"
+    },
+    {
+      "parameters": {
+        "jsCode": "const current=$input.first().json;return [{json:{status:'no_match',terminal:true,question:current.question,selection_method:'keyword_literal',literal_query:current.query,candidates:[],model_called:false,expected_model_actions:0,answer:'The Cole knowledge base does not provide enough evidence to answer this question.',sources:[]}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1664, -656],
+      "id": "af46978e-7bd1-4a50-a3dc-12c5ae8e176c",
+      "name": "Return terminal no_match without Gemini"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": { "main": [[{ "node": "Manual test — set question", "type": "main", "index": 0 }]] },
+    "Manual test — set question": { "main": [[{ "node": "Validate question and emit fixed indexes", "type": "main", "index": 0 }]] },
+    "Validate question and emit fixed indexes": { "main": [[{ "node": "Index request approved?", "type": "main", "index": 0 }]] },
+    "Index request approved?": { "main": [[{ "node": "Read fixed canonical indexes", "type": "main", "index": 0 }],[{ "node": "Return structured generalized error", "type": "main", "index": 0 }]] },
+    "Read fixed canonical indexes": { "main": [[{ "node": "Validate fixed index reads", "type": "main", "index": 0 }]] },
+    "Validate fixed index reads": { "main": [[{ "node": "Indexes approved?", "type": "main", "index": 0 }]] },
+    "Indexes approved?": { "main": [[{ "node": "Decode fixed indexes as UTF-8", "type": "main", "index": 0 }],[{ "node": "Return structured generalized error", "type": "main", "index": 0 }]] },
+    "Decode fixed indexes as UTF-8": { "main": [[{ "node": "Select deterministic index candidates", "type": "main", "index": 0 }]] },
+    "Select deterministic index candidates": { "main": [[{ "node": "Literal fallback needed?", "type": "main", "index": 0 }]] },
+    "Literal fallback needed?": { "main": [[{ "node": "Read scoped fallback Markdown", "type": "main", "index": 0 }],[{ "node": "Read selected canonical pages", "type": "main", "index": 0 }]] },
+    "Read scoped fallback Markdown": { "main": [[{ "node": "Validate scoped fallback reads", "type": "main", "index": 0 }]] },
+    "Validate scoped fallback reads": { "main": [[{ "node": "Fallback pages approved?", "type": "main", "index": 0 }]] },
+    "Fallback pages approved?": { "main": [[{ "node": "Decode fallback Markdown as UTF-8", "type": "main", "index": 0 }],[{ "node": "Return structured generalized error", "type": "main", "index": 0 }]] },
+    "Decode fallback Markdown as UTF-8": { "main": [[{ "node": "Select literal fallback candidates", "type": "main", "index": 0 }]] },
+    "Select literal fallback candidates": { "main": [[{ "node": "Fallback candidate found?", "type": "main", "index": 0 }]] },
+    "Fallback candidate found?": { "main": [[{ "node": "Read selected canonical pages", "type": "main", "index": 0 }],[{ "node": "Return terminal no_match without Gemini", "type": "main", "index": 0 }]] },
+    "Read selected canonical pages": { "main": [[{ "node": "Validate selected canonical reads", "type": "main", "index": 0 }]] },
+    "Validate selected canonical reads": { "main": [[{ "node": "Canonical pages approved?", "type": "main", "index": 0 }]] },
+    "Canonical pages approved?": { "main": [[{ "node": "Decode selected canonical pages", "type": "main", "index": 0 }],[{ "node": "Return structured generalized error", "type": "main", "index": 0 }]] },
+    "Decode selected canonical pages": { "main": [[{ "node": "Prepare canonical evidence and source requests", "type": "main", "index": 0 }]] },
+    "Prepare canonical evidence and source requests": { "main": [[{ "node": "Linked sources required?", "type": "main", "index": 0 }]] },
+    "Linked sources required?": { "main": [[{ "node": "Emit linked source requests", "type": "main", "index": 0 }],[{ "node": "Assemble generalized evidence packet", "type": "main", "index": 0 }]] },
+    "Emit linked source requests": { "main": [[{ "node": "Read linked source pages", "type": "main", "index": 0 }]] },
+    "Read linked source pages": { "main": [[{ "node": "Validate linked source reads", "type": "main", "index": 0 }]] },
+    "Validate linked source reads": { "main": [[{ "node": "Linked sources approved?", "type": "main", "index": 0 }]] },
+    "Linked sources approved?": { "main": [[{ "node": "Decode linked sources as UTF-8", "type": "main", "index": 0 }],[{ "node": "Return structured generalized error", "type": "main", "index": 0 }]] },
+    "Decode linked sources as UTF-8": { "main": [[{ "node": "Assemble generalized evidence packet", "type": "main", "index": 0 }]] },
+    "Assemble generalized evidence packet": { "main": [[{ "node": "Validate final packet bounds", "type": "main", "index": 0 }]] },
+    "Validate final packet bounds": { "main": [[{ "node": "Generalized packet approved?", "type": "main", "index": 0 }]] },
+    "Generalized packet approved?": { "main": [[{ "node": "One Gemini answer call", "type": "main", "index": 0 }],[{ "node": "Return structured generalized error", "type": "main", "index": 0 }]] },
+    "Gemini 3.5 Flash": { "ai_languageModel": [[{ "node": "One Gemini answer call", "type": "ai_languageModel", "index": 0 }]] },
+    "One Gemini answer call": { "main": [[{ "node": "Return generalized answer and measurements", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1", "binaryMode": "separate", "availableInMCP": false },
+  "nodeGroups": [],
+  "tags": []
+}

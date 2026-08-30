@@ -8,6 +8,7 @@ const workflowPaths = {
   chat: resolve(repositoryRoot, 'workflows/miranda-chat-gemini.json'),
   kb: resolve(repositoryRoot, 'workflows/kb-navigation.json'),
   pilot: resolve(repositoryRoot, 'workflows/miranda-one-call-pilot.json'),
+  generalized: resolve(repositoryRoot, 'workflows/miranda-one-call-generalized.json'),
 };
 const failures = [];
 
@@ -82,6 +83,7 @@ function validateCommon(label, workflow) {
 const chat = loadJson('chat workflow', workflowPaths.chat);
 const kb = loadJson('KB workflow', workflowPaths.kb);
 const pilot = loadJson('one-call pilot workflow', workflowPaths.pilot);
+const generalized = loadJson('generalized one-call workflow', workflowPaths.generalized);
 
 if (chat) {
   validateCommon('chat workflow', chat);
@@ -229,6 +231,72 @@ if (pilot) {
   check(resultCode.includes('expected_model_actions_on_success: 1'), 'pilot one-call measurement contract changed');
 }
 
+if (generalized) {
+  validateCommon('generalized one-call workflow', generalized);
+  check(generalized.name === 'miranda-one-call-generalized', 'generalized workflow name must remain miranda-one-call-generalized');
+  check(generalized.nodes.length === 35, 'generalized workflow must contain the 35 reviewed nodes');
+  check(!generalized.nodes.some((node) => node.type === '@n8n/n8n-nodes-langchain.agent'), 'generalized workflow must not contain an AI Agent');
+  check(!generalized.nodes.some((node) => node.type === '@n8n/n8n-nodes-langchain.toolWorkflow'), 'generalized workflow must not contain an agent workflow tool');
+  check(!generalized.nodes.some((node) => node.type === 'n8n-nodes-base.executeWorkflowTrigger'), 'generalized workflow must not be callable as a sub-workflow');
+  check(!generalized.nodes.some((node) => node.retryOnFail === true), 'generalized workflow must not enable automatic retries');
+  check(generalized.nodes.filter((node) => node.type === '@n8n/n8n-nodes-langchain.chainLlm').length === 1, 'generalized workflow must contain exactly one Basic LLM Chain');
+  check(generalized.nodes.filter((node) => node.type === '@n8n/n8n-nodes-langchain.lmChatGoogleGemini').length === 1, 'generalized workflow must contain exactly one Gemini node');
+
+  const manual = nodeByName(generalized, 'When clicking ‘Execute workflow’');
+  const validateQuestion = nodeByName(generalized, 'Validate question and emit fixed indexes');
+  const select = nodeByName(generalized, 'Select deterministic index candidates');
+  const readFallback = nodeByName(generalized, 'Read scoped fallback Markdown');
+  const prepare = nodeByName(generalized, 'Prepare canonical evidence and source requests');
+  const assemble = nodeByName(generalized, 'Assemble generalized evidence packet');
+  const finalBounds = nodeByName(generalized, 'Validate final packet bounds');
+  const noMatch = nodeByName(generalized, 'Return terminal no_match without Gemini');
+  const chain = nodeByName(generalized, 'One Gemini answer call');
+  const gemini = nodeByName(generalized, 'Gemini 3.5 Flash');
+  const result = nodeByName(generalized, 'Return generalized answer and measurements');
+
+  check(manual?.type === 'n8n-nodes-base.manualTrigger' && manual.typeVersion === 1, 'generalized manual trigger type/version changed');
+  check(chain?.type === '@n8n/n8n-nodes-langchain.chainLlm' && chain.typeVersion === 1.9, 'generalized Basic LLM Chain type/version changed');
+  check(chain?.parameters?.promptType === 'define' && chain.parameters.text === '={{ $json.model_prompt }}', 'generalized chain must use only the approved packet prompt');
+  check(gemini?.type === '@n8n/n8n-nodes-langchain.lmChatGoogleGemini' && gemini.typeVersion === 1.1, 'generalized Gemini type/version changed');
+  check(gemini?.parameters?.modelName === 'models/gemini-3.5-flash', 'generalized model must be models/gemini-3.5-flash');
+
+  check(hasEdge(generalized, 'When clicking ‘Execute workflow’', 'main', 'Manual test — set question'), 'generalized workflow must start from its manual test input');
+  check(hasEdge(generalized, 'Decode fixed indexes as UTF-8', 'main', 'Select deterministic index candidates'), 'decoded indexes must feed deterministic selection');
+  check(hasEdge(generalized, 'Literal fallback needed?', 'main', 'Read scoped fallback Markdown'), 'index failure must route to scoped literal fallback');
+  check(hasEdge(generalized, 'Fallback candidate found?', 'main', 'Return terminal no_match without Gemini'), 'zero literal candidates must terminate without Gemini');
+  check(hasEdge(generalized, 'Decode selected canonical pages', 'main', 'Prepare canonical evidence and source requests'), 'selected canonical pages must feed provenance preparation');
+  check(hasEdge(generalized, 'Decode linked sources as UTF-8', 'main', 'Assemble generalized evidence packet'), 'linked sources must feed packet assembly');
+  check(hasEdge(generalized, 'Assemble generalized evidence packet', 'main', 'Validate final packet bounds'), 'assembled packets must pass final deterministic bounds');
+  check(hasEdge(generalized, 'Validate final packet bounds', 'main', 'Generalized packet approved?'), 'only a final validated packet may reach the approval branch');
+  check(hasEdge(generalized, 'Generalized packet approved?', 'main', 'One Gemini answer call'), 'only an approved generalized packet may reach Gemini');
+  check(hasEdge(generalized, 'Gemini 3.5 Flash', 'ai_languageModel', 'One Gemini answer call'), 'generalized Gemini must connect directly to the one answer chain');
+  check(hasEdge(generalized, 'One Gemini answer call', 'main', 'Return generalized answer and measurements'), 'generalized answer must expose measurement fields');
+
+  const validateCode = validateQuestion?.parameters?.jsCode ?? '';
+  const selectCode = select?.parameters?.jsCode ?? '';
+  const prepareCode = prepare?.parameters?.jsCode ?? '';
+  const assembleCode = assemble?.parameters?.jsCode ?? '';
+  const finalBoundsCode = finalBounds?.parameters?.jsCode ?? '';
+  const noMatchCode = noMatch?.parameters?.jsCode ?? '';
+  const resultCode = result?.parameters?.jsCode ?? '';
+  check(validateCode.includes("const MAX_BYTES = 131072;"), 'generalized per-page byte limit changed');
+  for (const indexPath of ['concepts/index.md', 'entities/tools/index.md', 'entities/people/index.md', 'entities/organizations/index.md', 'sources/index.md']) {
+    check(validateCode.includes(`'${indexPath}'`), `generalized fixed index missing: ${indexPath}`);
+  }
+  check(selectCode.includes('const MAX_CANONICAL = 2;'), 'generalized canonical-page cap changed');
+  check(selectCode.includes("selection_method:'deterministic_index_score'"), 'generalized index selection method changed');
+  check(selectCode.includes("selection_method:'keyword_literal'"), 'generalized literal fallback method changed');
+  check(readFallback?.parameters?.fileSelector === '={{ $json.search_glob }}', 'generalized fallback read must use only its validated scoped glob');
+  check(prepareCode.includes('MAX_EXCERPT=5000'), 'generalized canonical excerpt bound changed');
+  check(assembleCode.includes('MAX_EVIDENCE=4'), 'generalized evidence-page bound changed');
+  check(assembleCode.includes('MAX_PACKET=20000'), 'generalized packet bound changed');
+  check(assembleCode.includes("schema:'uranus-evidence-packet-2'"), 'generalized packet schema changed');
+  check(finalBoundsCode.includes('entry.excerpt.length>5000'), 'generalized final per-excerpt bound changed');
+  check(finalBoundsCode.includes('current.packet_characters>20000'), 'generalized final serialized-packet bound changed');
+  check(noMatchCode.includes("model_called:false") && noMatchCode.includes('expected_model_actions:0'), 'generalized no_match must remain model-free');
+  check(resultCode.includes('expected_model_actions_on_success:1'), 'generalized supported-answer one-call contract changed');
+}
+
 if (failures.length > 0) {
   console.error('Workflow artifact validation failed:');
   for (const failure of failures) console.error(`- ${failure}`);
@@ -238,6 +306,7 @@ if (failures.length > 0) {
   console.log('- Accepted Gemini Stage 2B topology and behavioral fields are preserved.');
   console.log('- Workflow exports are inactive, unpinned, credential-free, and instance-neutral.');
   console.log('- The isolated Q4 one-call pilot is bounded and cannot alter the accepted baseline workflows.');
+  console.log('- The generalized one-call experiment is bounded, model-free during retrieval, and terminal on no_match.');
   console.log('- Embedded Code-node JavaScript parses successfully.');
   console.log('This is static artifact validation, not automated AI evaluation.');
 }
