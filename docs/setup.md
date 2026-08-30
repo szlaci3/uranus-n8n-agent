@@ -114,7 +114,29 @@ On n8n 2.26.4, Call n8n Workflow Tool required the supporting workflow to be act
 
 Provider 429 or 503 responses are not retrieval results. Record them separately and avoid silent model, credential, or project rotation.
 
-## 7. Validate the public artifacts
+## 7. Run the isolated one-call pilot
+
+This is a separate measurement and does not replace the accepted workflows.
+
+1. Import
+   [`workflows/miranda-one-call-pilot.json`](../workflows/miranda-one-call-pilot.json).
+2. Keep the pilot inactive.
+3. Open `Gemini 3.5 Flash`, select the same local credential used for the Q4
+   control, and confirm `models/gemini-3.5-flash`.
+4. Inspect the fixed canonical paths, packet limits, and model connection.
+5. Run only its manual trigger. The artifact supplies the exact frozen Q4
+   question itself.
+6. Confirm the execution reads exactly the two answer-evidence pages, produces
+   one approved packet, and contains exactly one Gemini action.
+7. Record the final answer, exact Sources list, packet character count, and
+   every provider usage field exposed by n8n. Compare them with the control
+   record in [Evaluation](evaluation.md).
+
+Do not activate the pilot, add a Chat Trigger, substitute a model, broaden the
+question, or treat a smaller token count as success if grounding or provenance
+regresses.
+
+## 8. Validate the public artifacts
 
 From the repository root:
 
@@ -123,3 +145,13 @@ node scripts/validate-workflows.mjs
 ```
 
 This validates the sanitized files and accepted structure. It does not exercise n8n, call Gemini, or replace the manual execution-trace evaluation.
+
+When the external Cole KB is present, also validate deterministic packet
+assembly with its absolute root path:
+
+```bash
+node scripts/validate-pilot-packet.mjs /absolute/path/to/knowledge/cole-medin-knowledge-base
+```
+
+This reads the two frozen canonical pages locally and verifies the packet's
+claim, source evidence, route, and character bounds. It does not call Gemini.

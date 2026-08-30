@@ -1,0 +1,423 @@
+{
+  "name": "miranda-one-call-pilot",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1488,
+        96
+      ],
+      "id": "7419e8c8-552a-4b86-9567-bb82ed44e79a",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { question: 'What does Cole mean when he says an LLM gets into “the dumb zone”?' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1264,
+        96
+      ],
+      "id": "3d4d886a-043f-44b0-b02c-c2ca593ca018",
+      "name": "Manual test — exact Q4"
+    },
+    {
+      "parameters": {
+        "jsCode": "const KB_ROOT = '/home/node/.n8n-files/Uranus/knowledge/cole-medin-knowledge-base';\nconst SOURCE_ROOT = 'knowledge/cole-medin-knowledge-base';\nconst EXACT_QUESTION = 'What does Cole mean when he says an LLM gets into “the dumb zone”?';\nconst MAX_BYTES = 131072;\nconst route = [\n  { kb_path: 'concepts/context-rot.md', role: 'canonical_concept' },\n  { kb_path: 'sources/are-agent-harnesses-bringing-back-vibe-coding.md', role: 'linked_source' },\n];\nconst input = $input.first().json;\nif (typeof input.question !== 'string' || input.question !== EXACT_QUESTION) {\n  return [{ json: {\n    status: 'error',\n    error_code: 'PILOT_QUESTION_MISMATCH',\n    message: 'This one-question pilot accepts only the exact frozen Q4 question.',\n    expected_question: EXACT_QUESTION,\n    received_question: typeof input.question === 'string' ? input.question : null,\n    _route_ready: false,\n  } }];\n}\nreturn route.map((entry, route_index) => ({ json: {\n  status: 'validated',\n  question: EXACT_QUESTION,\n  selection_method: 'frozen_index_and_link_route',\n  route_index,\n  role: entry.role,\n  kb_path: entry.kb_path,\n  source_path: `${SOURCE_ROOT}/${entry.kb_path}`,\n  absolute_path: `${KB_ROOT}/${entry.kb_path}`,\n  max_bytes: MAX_BYTES,\n  _route_ready: true,\n} }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1040,
+        96
+      ],
+      "id": "74766a8e-b9bc-46a2-b05f-446a4c681cd6",
+      "name": "Validate exact Q4 and emit frozen route"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a1c01b95-f4cd-4b32-95f5-8d6b2df30d8e",
+              "leftValue": "={{ $json._route_ready }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -816,
+        96
+      ],
+      "id": "30e905d2-e7f9-4f08-9532-485233365d4e",
+      "name": "Frozen route approved?"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $json.absolute_path }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -592,
+        16
+      ],
+      "id": "c2572cdb-a2f8-48c7-83d9-613609640939",
+      "name": "Read frozen canonical pages",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const KB_ROOT = '/home/node/.n8n-files/Uranus/knowledge/cole-medin-knowledge-base';\nconst manifest = $('Validate exact Q4 and emit frozen route').all().map((item) => item.json);\nconst items = $input.all();\nfunction fail(errorCode, message) {\n  return [{ json: { status: 'error', error_code: errorCode, message, _can_extract: false } }];\n}\nif (manifest.length !== 2 || manifest.some((entry) => entry.status !== 'validated')) {\n  return fail('INVALID_ROUTE_MANIFEST', 'The frozen Q4 route manifest is incomplete.');\n}\nif (items.length !== manifest.length || items.some((item) => typeof item.json.error === 'string')) {\n  return fail('ROUTE_READ_FAILED', 'Every frozen canonical page must be read successfully before packet assembly.');\n}\nconst expectedByAbsolutePath = new Map(manifest.map((entry) => [entry.absolute_path, entry]));\nconst seen = new Set();\nconst prepared = [];\nfor (const item of items) {\n  const binary = item.binary?.data;\n  const bytes = Number(binary?.bytes);\n  const directory = typeof binary?.directory === 'string' ? binary.directory.split(String.fromCharCode(92)).join('/') : '';\n  const fileName = typeof binary?.fileName === 'string' ? binary.fileName : '';\n  if (!binary || !Number.isSafeInteger(bytes) || bytes < 0 || !directory || !fileName) {\n    return fail('ROUTE_READ_FAILED', 'A frozen route page did not return trustworthy path or size metadata.');\n  }\n  const absolutePath = `${directory.replace(/[/]+$/, '')}/${fileName}`;\n  if (!absolutePath.startsWith(`${KB_ROOT}/`)) {\n    return fail('ROUTE_SCOPE_VIOLATION', 'A frozen route page resolved outside the Uranus Cole KB root.');\n  }\n  const expected = expectedByAbsolutePath.get(absolutePath);\n  if (!expected || seen.has(absolutePath)) {\n    return fail('ROUTE_SCOPE_VIOLATION', 'The file read did not match the unique frozen route manifest.');\n  }\n  if (bytes > expected.max_bytes) {\n    return fail('PAGE_TOO_LARGE', `A frozen route page exceeds the ${expected.max_bytes}-byte limit.`);\n  }\n  seen.add(absolutePath);\n  prepared.push({ json: { ...expected, status: 'ready', content_bytes: bytes, _can_extract: true }, binary: item.binary });\n}\nif (seen.size !== manifest.length) return fail('ROUTE_READ_FAILED', 'A frozen route page is missing.');\nprepared.sort((left, right) => left.json.route_index - right.json.route_index);\nreturn prepared;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        16
+      ],
+      "id": "c581a25a-f4c9-4338-8071-da4b4d57ab70",
+      "name": "Validate frozen page reads"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "63fa1204-1f15-49c6-9a95-720be20ac55b",
+              "leftValue": "={{ $json._can_extract }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -144,
+        16
+      ],
+      "id": "060f4df1-ac61-4a3e-92e8-5cfecc00a0dc",
+      "name": "Frozen pages approved?"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "destinationKey": "content",
+        "options": {
+          "encoding": "utf8",
+          "stripBOM": true,
+          "keepSource": "json"
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        80,
+        -64
+      ],
+      "id": "eddfb41e-61f5-4316-a579-c55fc02dd312",
+      "name": "Decode canonical Markdown as UTF-8",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const EXPECTED_QUESTION = 'What does Cole mean when he says an LLM gets into “the dumb zone”?';\nconst EXPECTED_PATHS = [\n  'concepts/context-rot.md',\n  'sources/are-agent-harnesses-bringing-back-vibe-coding.md',\n];\nconst MAX_PAGES = 2;\nconst MAX_EXCERPT_CHARS_PER_PAGE = 5000;\nconst MAX_PACKET_CHARS = 10000;\nfunction fail(errorCode, message) {\n  return [{ json: { status: 'error', error_code: errorCode, message, _packet_ready: false } }];\n}\nfunction bodyWithoutFrontmatter(content) {\n  if (!content.startsWith('---')) return content.trim();\n  const marker = content.indexOf('\\n---', 3);\n  if (marker === -1) return '';\n  const after = content.indexOf('\\n', marker + 4);\n  return after === -1 ? '' : content.slice(after + 1).trim();\n}\nfunction beforeHeading(body, heading) {\n  const at = body.indexOf(`\\n${heading}`);\n  return (at === -1 ? body : body.slice(0, at)).trim();\n}\nconst items = $input.all();\nif (items.length !== MAX_PAGES) return fail('PACKET_ROUTE_MISMATCH', 'The packet requires exactly two decoded canonical pages.');\nconst byPath = new Map();\nfor (const item of items) {\n  const current = item.json;\n  if (typeof current.error === 'string' || typeof current.content !== 'string') return fail('DECODE_FAILED', 'A frozen route page could not be decoded as UTF-8.');\n  if (current.content.includes('�')) return fail('INVALID_UTF8', 'A frozen route page contains invalid UTF-8 byte sequences.');\n  if (!EXPECTED_PATHS.includes(current.kb_path) || byPath.has(current.kb_path)) return fail('PACKET_ROUTE_MISMATCH', 'Decoded pages do not match the unique frozen evidence route.');\n  byPath.set(current.kb_path, current);\n}\nif (EXPECTED_PATHS.some((path) => !byPath.has(path))) return fail('PACKET_ROUTE_MISMATCH', 'A required frozen evidence page is missing.');\nconst concept = byPath.get(EXPECTED_PATHS[0]);\nconst conceptBody = bodyWithoutFrontmatter(concept.content);\nconst conceptCore = beforeHeading(conceptBody, '## Contrasts with');\nconst sourceLinkLine = conceptBody.split(/\\r?\\n/).find((line) => line.includes('(../sources/are-agent-harnesses-bringing-back-vibe-coding.md)'));\nif (!conceptCore.includes('gets into the dumb zone') || !sourceLinkLine) return fail('PROVENANCE_MISSING', 'The concept page no longer contains the frozen Q4 claim and linked source evidence.');\nconst conceptExcerpt = `${conceptCore}\\n\\n## Linked source evidence\\n\\n${sourceLinkLine}`;\nconst source = byPath.get(EXPECTED_PATHS[1]);\nconst sourceBody = bodyWithoutFrontmatter(source.content);\nconst sourceSummary = beforeHeading(sourceBody, '## Concepts covered');\nconst keyMomentLine = sourceBody.split(/\\r?\\n/).find((line) => line.includes('**[0:19:21]**'));\nif (!sourceSummary || !keyMomentLine || !sourceSummary.toLowerCase().includes('bounded attention')) return fail('PROVENANCE_MISSING', 'The linked source no longer contains the frozen Q4 summary and key moment.');\nconst sourceExcerpt = `${sourceSummary}\\n\\n## Key moment\\n\\n${keyMomentLine}`;\nconst evidence = [\n  {\n    kb_path: concept.kb_path,\n    source_path: concept.source_path,\n    heading: 'Context Rot',\n    role: 'canonical_concept',\n    excerpt: conceptExcerpt,\n    linked_sources: [source.kb_path],\n  },\n  {\n    kb_path: source.kb_path,\n    source_path: source.source_path,\n    heading: 'Are Agent Harnesses Bringing Back Vibe Coding?',\n    role: 'linked_source',\n    excerpt: sourceExcerpt,\n    linked_sources: [],\n  },\n];\nif (evidence.some((entry) => entry.excerpt.length === 0 || entry.excerpt.length > MAX_EXCERPT_CHARS_PER_PAGE)) {\n  return fail('EXCERPT_BOUND_EXCEEDED', `Every excerpt must contain 1-${MAX_EXCERPT_CHARS_PER_PAGE} characters.`);\n}\nconst packet = {\n  schema: 'uranus-evidence-packet-1',\n  question: EXPECTED_QUESTION,\n  selection_method: 'frozen_index_and_link_route',\n  control_trace: [\n    { sequence: 1, operation: 'read_kb_page', kb_path: 'index.md', role: 'navigation_locator' },\n    { sequence: 2, operation: 'find_kb_pages', method: 'keyword_literal', query: 'dumb zone', candidates: ['concepts/context-rot.md'], role: 'candidate_locator' },\n    { sequence: 3, operation: 'read_kb_page', kb_path: EXPECTED_PATHS[0], role: 'canonical_concept' },\n    { sequence: 4, operation: 'read_kb_page', kb_path: EXPECTED_PATHS[1], role: 'linked_source' },\n  ],\n  route: EXPECTED_PATHS,\n  evidence,\n  limits: { max_pages: MAX_PAGES, max_excerpt_chars_per_page: MAX_EXCERPT_CHARS_PER_PAGE, max_packet_chars: MAX_PACKET_CHARS },\n};\nconst packetJson = JSON.stringify(packet, null, 2);\nif (packetJson.length > MAX_PACKET_CHARS) return fail('PACKET_BOUND_EXCEEDED', `The evidence packet exceeds the ${MAX_PACKET_CHARS}-character limit.`);\nconst modelPrompt = `You are Miranda. Answer the exact question using only the validated evidence packet below.\\n\\nRequirements:\\n- Explain the phrase directly and concisely.\\n- Support every material claim with packet evidence; do not add model knowledge.\\n- Cite only kb_path values present in packet.evidence.\\n- Preserve the linked source provenance.\\n- End with a Sources section containing the exact cited kb_path values as Markdown bullets.\\n- If the packet is insufficient, say so instead of guessing.\\n\\nQuestion:\\n${EXPECTED_QUESTION}\\n\\nValidated evidence packet:\\n${packetJson}`;\nreturn [{ json: {\n  status: 'success',\n  question: EXPECTED_QUESTION,\n  selection_method: packet.selection_method,\n  evidence_packet: packet,\n  evidence_packet_json: packetJson,\n  packet_characters: packetJson.length,\n  evidence_paths: EXPECTED_PATHS,\n  model_prompt: modelPrompt,\n  _packet_ready: true,\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        -64
+      ],
+      "id": "0b00ce3d-ea9f-4275-9bd3-f65bef7264e4",
+      "name": "Assemble bounded evidence packet"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b891ba22-660d-4b78-9540-1221f6925659",
+              "leftValue": "={{ $json._packet_ready }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        528,
+        -64
+      ],
+      "id": "3cb1c8ea-2bb3-4509-9714-bc526b640fe0",
+      "name": "Evidence packet approved?"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.model_prompt }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        752,
+        -144
+      ],
+      "id": "142896d5-c2b2-4841-8e07-af1e38bd8512",
+      "name": "One Gemini answer call"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        752,
+        80
+      ],
+      "id": "56466f1b-bd85-46dd-b7a6-86351c7c5524",
+      "name": "Gemini 3.5 Flash"
+    },
+    {
+      "parameters": {
+        "jsCode": "const packetResult = $('Assemble bounded evidence packet').first().json;\nconst modelResult = $input.first().json;\nconst answer = typeof modelResult.text === 'string' ? modelResult.text : (typeof modelResult.output === 'string' ? modelResult.output : null);\nif (!answer) {\n  return [{ json: { status: 'error', error_code: 'MODEL_OUTPUT_MISSING', message: 'The one-call model node did not return a text answer.' } }];\n}\nreturn [{ json: {\n  status: 'success',\n  question: packetResult.question,\n  selection_method: packetResult.selection_method,\n  model: 'models/gemini-3.5-flash',\n  expected_model_actions_on_success: 1,\n  packet_characters: packetResult.packet_characters,\n  evidence_paths: packetResult.evidence_paths,\n  answer,\n  measurement_note: 'Confirm the single Gemini action and provider token usage from this n8n execution trace.',\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        976,
+        -144
+      ],
+      "id": "cd55f151-b414-4e05-9056-3acd1e14daab",
+      "name": "Return pilot answer and measurement fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "const current = $input.first().json;\nreturn [{ json: {\n  status: 'error',\n  error_code: current.error_code ?? 'PILOT_VALIDATION_FAILED',\n  message: current.message ?? 'The one-call pilot stopped before Gemini because deterministic validation failed.',\n  expected_question: current.expected_question ?? null,\n  received_question: current.received_question ?? null,\n  model_called: false,\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        208
+      ],
+      "id": "c7da10f7-705c-43ee-9066-f764f4e9949c",
+      "name": "Return structured pilot error"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Manual test — exact Q4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual test — exact Q4": {
+      "main": [
+        [
+          {
+            "node": "Validate exact Q4 and emit frozen route",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate exact Q4 and emit frozen route": {
+      "main": [
+        [
+          {
+            "node": "Frozen route approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Frozen route approved?": {
+      "main": [
+        [
+          {
+            "node": "Read frozen canonical pages",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return structured pilot error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read frozen canonical pages": {
+      "main": [
+        [
+          {
+            "node": "Validate frozen page reads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate frozen page reads": {
+      "main": [
+        [
+          {
+            "node": "Frozen pages approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Frozen pages approved?": {
+      "main": [
+        [
+          {
+            "node": "Decode canonical Markdown as UTF-8",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return structured pilot error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decode canonical Markdown as UTF-8": {
+      "main": [
+        [
+          {
+            "node": "Assemble bounded evidence packet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assemble bounded evidence packet": {
+      "main": [
+        [
+          {
+            "node": "Evidence packet approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evidence packet approved?": {
+      "main": [
+        [
+          {
+            "node": "One Gemini answer call",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return structured pilot error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini 3.5 Flash": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "One Gemini answer call",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "One Gemini answer call": {
+      "main": [
+        [
+          {
+            "node": "Return pilot answer and measurement fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "nodeGroups": [],
+  "tags": []
+}

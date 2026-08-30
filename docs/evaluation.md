@@ -73,6 +73,47 @@ A passing answer must:
 
 Cases 1–3 are historical Stage 2A evidence from Gemini 3 Flash Preview. Cases 4–6 validate the accepted Stage 2B behavior and Gemini 3.5 Flash artifact published in this repository. They should not be rewritten as though every case used the same provider-model version.
 
+## Q4 one-call control and prepared pilot
+
+On 2026-08-30, the user supplied the detailed accepted-control record needed
+for the isolated [one-call pilot](one-call-pilot.md). The exact Q4 question was
+`What does Cole mean when he says an LLM gets into “the dumb zone”?`
+
+The accepted Miranda trace was:
+
+1. `read_kb_page(index.md)`
+2. `find_kb_pages("dumb zone")`, returning the sole candidate
+   `concepts/context-rot.md`
+3. `read_kb_page(concepts/context-rot.md)`
+4. `read_kb_page(sources/are-agent-harnesses-bringing-back-vibe-coding.md)`
+
+The run used five Gemini actions and exactly 26,957 total tokens. n8n did not
+expose an input/output/cache breakdown. The user-provided per-action figures
+of approximately 1,400, 4,000, 4,700, 6,700, and 9,600 tokens are retained as
+approximations; they sum to 26,400 rather than the exact total. The final
+answer passed the previously recorded Q4 quality, grounding, and provenance
+gate and cited only the concept page and linked source page.
+
+The inactive `workflows/miranda-one-call-pilot.json` freezes that exact
+question and route, reloads those two answer-evidence pages from canonical
+Markdown, extracts a bounded packet, and connects one Basic LLM Chain to
+Gemini 3.5 Flash. Navigation-only `index.md` and the literal fallback result
+remain in the packet's control-trace metadata but are not sent as answer
+evidence.
+
+The user ran the pilot on 2026-08-30 with the same Gemini model, credential,
+and provider tier as the control. The successful execution contained exactly
+one Gemini action with no retry, used exactly 2,246 total tokens, and completed
+in 30.539 seconds. n8n exposed no input/output/cache breakdown. The answer
+passed quality, completeness, grounding, and provenance review and cited
+exactly the two packet evidence paths.
+
+Compared with the control, the pilot used four fewer Gemini actions and 24,711
+fewer tokens: an 80% action-count reduction and approximately 91.7% lower
+total token usage, or roughly one twelfth of the control. This is a passed
+one-question experiment, not evidence that frozen deterministic routes
+generalize to arbitrary questions.
+
 ## Failure-driven changes
 
 ### Phantom citations

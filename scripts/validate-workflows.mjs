@@ -7,6 +7,7 @@ const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const workflowPaths = {
   chat: resolve(repositoryRoot, 'workflows/miranda-chat-gemini.json'),
   kb: resolve(repositoryRoot, 'workflows/kb-navigation.json'),
+  pilot: resolve(repositoryRoot, 'workflows/miranda-one-call-pilot.json'),
 };
 const failures = [];
 
@@ -80,6 +81,7 @@ function validateCommon(label, workflow) {
 
 const chat = loadJson('chat workflow', workflowPaths.chat);
 const kb = loadJson('KB workflow', workflowPaths.kb);
+const pilot = loadJson('one-call pilot workflow', workflowPaths.pilot);
 
 if (chat) {
   validateCommon('chat workflow', chat);
@@ -160,6 +162,73 @@ if (kb) {
   check(candidateCode.includes("status: 'no_match', terminal: true"), 'terminal no_match behavior changed');
 }
 
+if (pilot) {
+  validateCommon('one-call pilot workflow', pilot);
+  check(pilot.name === 'miranda-one-call-pilot', 'pilot workflow name must remain miranda-one-call-pilot');
+  check(pilot.nodes.length === 14, 'pilot workflow must contain the 14 reviewed nodes');
+
+  const expectedNames = new Set([
+    'When clicking ‘Execute workflow’',
+    'Manual test — exact Q4',
+    'Validate exact Q4 and emit frozen route',
+    'Frozen route approved?',
+    'Read frozen canonical pages',
+    'Validate frozen page reads',
+    'Frozen pages approved?',
+    'Decode canonical Markdown as UTF-8',
+    'Assemble bounded evidence packet',
+    'Evidence packet approved?',
+    'One Gemini answer call',
+    'Gemini 3.5 Flash',
+    'Return pilot answer and measurement fields',
+    'Return structured pilot error',
+  ]);
+  check(pilot.nodes.every((node) => expectedNames.has(node.name)), 'pilot workflow contains an unexpected node');
+  check(!pilot.nodes.some((node) => node.type === '@n8n/n8n-nodes-langchain.agent'), 'pilot workflow must not contain an AI Agent');
+  check(!pilot.nodes.some((node) => node.type === '@n8n/n8n-nodes-langchain.toolWorkflow'), 'pilot workflow must not contain an agent workflow tool');
+  check(!pilot.nodes.some((node) => node.type === 'n8n-nodes-base.executeWorkflowTrigger'), 'pilot workflow must not be callable as a sub-workflow');
+
+  const manual = nodeByName(pilot, 'When clicking ‘Execute workflow’');
+  const route = nodeByName(pilot, 'Validate exact Q4 and emit frozen route');
+  const read = nodeByName(pilot, 'Read frozen canonical pages');
+  const assemble = nodeByName(pilot, 'Assemble bounded evidence packet');
+  const chain = nodeByName(pilot, 'One Gemini answer call');
+  const gemini = nodeByName(pilot, 'Gemini 3.5 Flash');
+  const result = nodeByName(pilot, 'Return pilot answer and measurement fields');
+
+  check(manual?.type === 'n8n-nodes-base.manualTrigger' && manual.typeVersion === 1, 'pilot manual trigger type/version changed');
+  check(read?.type === 'n8n-nodes-base.readWriteFile' && read.typeVersion === 1.1, 'pilot file-read type/version changed');
+  check(read?.parameters?.fileSelector === '={{ $json.absolute_path }}', 'pilot file read must use only the validated fixed absolute path');
+  check(chain?.type === '@n8n/n8n-nodes-langchain.chainLlm' && chain.typeVersion === 1.9, 'pilot Basic LLM Chain type/version changed');
+  check(chain?.parameters?.promptType === 'define' && chain.parameters.text === '={{ $json.model_prompt }}', 'pilot chain must use the validated packet prompt');
+  check(gemini?.type === '@n8n/n8n-nodes-langchain.lmChatGoogleGemini' && gemini.typeVersion === 1.1, 'pilot Gemini type/version changed');
+  check(gemini?.parameters?.modelName === 'models/gemini-3.5-flash', 'pilot model must be models/gemini-3.5-flash');
+
+  check(hasEdge(pilot, 'When clicking ‘Execute workflow’', 'main', 'Manual test — exact Q4'), 'pilot manual trigger must feed the exact Q4 input');
+  check(hasEdge(pilot, 'Read frozen canonical pages', 'main', 'Validate frozen page reads'), 'pilot reads must pass through deterministic validation');
+  check(hasEdge(pilot, 'Decode canonical Markdown as UTF-8', 'main', 'Assemble bounded evidence packet'), 'pilot decoded pages must feed packet assembly');
+  check(hasEdge(pilot, 'Evidence packet approved?', 'main', 'One Gemini answer call'), 'only an approved packet may reach Gemini');
+  check(hasEdge(pilot, 'Gemini 3.5 Flash', 'ai_languageModel', 'One Gemini answer call'), 'pilot Gemini must connect directly to the one answer chain');
+  check(hasEdge(pilot, 'One Gemini answer call', 'main', 'Return pilot answer and measurement fields'), 'pilot answer must expose measurement fields');
+
+  const routeCode = route?.parameters?.jsCode ?? '';
+  const assembleCode = assemble?.parameters?.jsCode ?? '';
+  const resultCode = result?.parameters?.jsCode ?? '';
+  const exactQuestion = 'What does Cole mean when he says an LLM gets into “the dumb zone”?';
+  check(routeCode.includes(exactQuestion), 'pilot exact Q4 question changed');
+  check(routeCode.includes("const MAX_BYTES = 131072;"), 'pilot per-page byte limit changed');
+  check(routeCode.includes("'concepts/context-rot.md'"), 'pilot canonical concept path changed');
+  check(routeCode.includes("'sources/are-agent-harnesses-bringing-back-vibe-coding.md'"), 'pilot linked source path changed');
+  check(assembleCode.includes('const MAX_PAGES = 2;'), 'pilot page-count bound changed');
+  check(assembleCode.includes('const MAX_EXCERPT_CHARS_PER_PAGE = 5000;'), 'pilot per-excerpt bound changed');
+  check(assembleCode.includes('const MAX_PACKET_CHARS = 10000;'), 'pilot packet bound changed');
+  check(assembleCode.includes("schema: 'uranus-evidence-packet-1'"), 'pilot packet schema changed');
+  check(assembleCode.includes("query: 'dumb zone'"), 'pilot recorded literal fallback query changed');
+  check(assembleCode.includes("operation: 'find_kb_pages'"), 'pilot control trace no longer records fallback');
+  check(assembleCode.includes("operation: 'read_kb_page'"), 'pilot control trace no longer records page reads');
+  check(resultCode.includes('expected_model_actions_on_success: 1'), 'pilot one-call measurement contract changed');
+}
+
 if (failures.length > 0) {
   console.error('Workflow artifact validation failed:');
   for (const failure of failures) console.error(`- ${failure}`);
@@ -168,6 +237,7 @@ if (failures.length > 0) {
   console.log('Workflow artifact validation passed.');
   console.log('- Accepted Gemini Stage 2B topology and behavioral fields are preserved.');
   console.log('- Workflow exports are inactive, unpinned, credential-free, and instance-neutral.');
+  console.log('- The isolated Q4 one-call pilot is bounded and cannot alter the accepted baseline workflows.');
   console.log('- Embedded Code-node JavaScript parses successfully.');
   console.log('This is static artifact validation, not automated AI evaluation.');
 }

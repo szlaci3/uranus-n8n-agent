@@ -28,7 +28,7 @@ Miranda — n8n AI Agent
                               `-- candidate must be read before use
 ```
 
-The project contains two n8n workflows:
+The accepted system contains two n8n workflows:
 
 - [`miranda-chat-gemini.json`](workflows/miranda-chat-gemini.json) contains Chat Trigger, Miranda, Gemini 3.5 Flash, and the two agent-facing tools.
 - [`kb-navigation.json`](workflows/kb-navigation.json) implements exact-page reads, scoped literal search, input and path validation, size and UTF-8 checks, structured results, and closed error branches.
@@ -89,6 +89,18 @@ A separate rate-limit incident also showed that a user turn with several tool ca
 ## Model-portability experiment
 
 A local Qwen3 8B model connected through n8n’s Ollama node and could invoke tools, but it did not pass the same behavioral contract. It skipped linked-source and fallback obligations, summarized index pages, omitted canonical citations, and expanded beyond retrieved evidence. Its lower call count represented incomplete work rather than demonstrated efficiency. Gemini 3.5 Flash remains the accepted baseline; the Qwen workflow is intentionally not included here.
+
+## Planned one-call measurement
+
+The [one-call evidence-packet pilot](docs/one-call-pilot.md) specifies an
+isolated, one-question comparison between accepted Miranda and a deterministic
+bounded evidence packet followed by one Gemini answer call. The inactive
+artifact is `workflows/miranda-one-call-pilot.json`. Its single live Q4 run
+passed answer quality, grounding, and provenance with one Gemini action,
+2,246 total tokens, and a 30.539-second duration, versus five actions and
+26,957 tokens for the accepted control. This question-specific result does not
+establish a general retrieval replacement. The accepted workflow artifacts
+are unchanged.
 
 ## Run locally
 
