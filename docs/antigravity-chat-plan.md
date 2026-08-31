@@ -1,7 +1,15 @@
 # Antigravity contextual chat plan
 
-**Status:** Revised proposal. No workflow implementation has been made from
-this plan.
+**Status:** Implemented and hardened in
+`workflows/miranda-chat-antigravity.json` (inactive export).
+
+The one-call Antigravity workflow remains the frozen comparison baseline:
+`workflows/miranda-one-call-antigravity.json`. The Gemini workflow, its
+validator, and Gemini-focused documentation are intentionally unchanged.
+
+The chat export is checked by the separate
+`scripts/validate-chat-antigravity.mjs` validator; the existing Gemini-oriented
+validator is not used for this artifact.
 
 ## Objective
 
