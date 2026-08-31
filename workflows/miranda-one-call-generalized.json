@@ -335,34 +335,59 @@
       "name": "Validate final packet bounds"
     },
     {
-      "parameters": { "promptType": "define", "text": "={{ $json.model_prompt }}" },
-      "type": "@n8n/n8n-nodes-langchain.chainLlm",
-      "typeVersion": 1.9,
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/interactions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ agent: 'antigravity-preview-05-2026', input: $json.model_prompt, environment: 'remote', tools: [], agent_config: { type: 'antigravity', max_total_tokens: 20000 } }) }}",
+        "options": { "timeout": 300000 }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [4576, -384],
-      "id": "2acd9294-532f-45af-af62-6eff988908fa",
-      "name": "One Gemini answer call"
-    },
-    {
-      "parameters": { "modelName": "models/gemini-3.5-flash", "options": {} },
-      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
-      "typeVersion": 1.1,
-      "position": [4576, -160],
-      "id": "dc72934f-9d5b-4c20-b5a0-7be2ea0f2318",
-      "name": "Gemini 3.5 Flash"
+      "id": "7b8df3e6-2c3a-4c5e-9f7a-1d6b8a4e2c90",
+      "name": "Run Antigravity answer",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "U4ZjJhyn4PsnZLwA",
+          "name": "Header Auth account"
+        }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
-        "jsCode": "const packet=$('Assemble generalized evidence packet').first().json,result=$input.first().json;const answer=typeof result.text==='string'?result.text:(typeof result.output==='string'?result.output:null);if(!answer)return [{json:{status:'error',error_code:'MODEL_OUTPUT_MISSING',message:'The one-call model node returned no text answer.'}}];return [{json:{status:'success',question:packet.question,selection_method:packet.selection_method,literal_query:packet.literal_query,model:'models/gemini-3.5-flash',expected_model_actions_on_success:1,packet_characters:packet.packet_characters,evidence_paths:packet.evidence_paths,answer,measurement_note:'Confirm one Gemini action, provider token usage, duration, grounding, completeness, and Sources from this execution.'}}];"
+        "jsCode": "const packet=$('Assemble generalized evidence packet').first().json;const result=$input.first().json??{};const status=result.status;const model='antigravity-preview-05-2026';if(result.error){return [{json:{status:'error',error_code:'ANTIGRAVITY_REQUEST_FAILED',message:typeof result.error==='string'?result.error:(result.error.message??'Antigravity request failed.'),model,model_called:true,interaction_status:status??null}}];}if(status==='failed'||status==='incomplete'||status==='requires_action'){return [{json:{status:'error',error_code:`ANTIGRAVITY_${String(status).toUpperCase()}`,message:result.error?.message??`Antigravity interaction ended with status ${status}.`,model,model_called:true,interaction_status:status}}];}const answer=(result.steps??[]).filter(step=>step.type==='model_output').flatMap(step=>step.content??[]).filter(part=>part.type==='text').map(part=>part.text).join('\\n\\n').trim();if(status!=='completed'||!answer)return [{json:{status:'error',error_code:'MODEL_OUTPUT_MISSING',message:'Antigravity returned no completed text answer.',model,model_called:true,interaction_status:status??null}}];return [{json:{status:'success',text:answer,model,interaction_status:status,interaction_id:result.id??null,usage:result.usage??null}}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [4800, -384],
+      "id": "e2c4a7f1-9b6d-4e3a-8c5f-2d7b1a9e6f40",
+      "name": "Validate Antigravity answer"
+    },
+    {
+      "parameters": {
+        "jsCode": "const packet=$('Assemble generalized evidence packet').first().json,result=$input.first().json??{};if(result.status!=='success'||typeof result.text!=='string'||!result.text.trim())return [{json:{status:'error',error_code:result.error_code??'MODEL_OUTPUT_MISSING',message:result.message??'Antigravity returned no text answer.',model_called:true,interaction_status:result.interaction_status??null}}];return [{json:{status:'success',question:packet.question,selection_method:packet.selection_method,literal_query:packet.literal_query,model:result.model??'antigravity-preview-05-2026',expected_model_actions_on_success:1,packet_characters:packet.packet_characters,evidence_paths:packet.evidence_paths,answer:result.text,interaction_id:result.interaction_id??null,interaction_status:result.interaction_status??null,usage:result.usage??null,measurement_note:'Confirm one Antigravity interaction, provider token usage, duration, grounding, completeness, and Sources from this execution.'}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [5024, -384],
       "id": "15eebbd8-d6a1-4a2b-8829-437274a1dfd0",
       "name": "Return generalized answer and measurements"
     },
     {
       "parameters": {
-        "jsCode": "const current=$input.first().json;return [{json:{status:'error',error_code:current.error_code??'GENERALIZED_VALIDATION_FAILED',message:current.message??'Deterministic validation stopped before Gemini.',model_called:false}}];"
+        "jsCode": "const current=$input.first().json;return [{json:{status:'error',error_code:current.error_code??'GENERALIZED_VALIDATION_FAILED',message:current.message??'Deterministic validation stopped before Antigravity.',model_called:false}}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -378,7 +403,7 @@
       "typeVersion": 2,
       "position": [1664, -656],
       "id": "af46978e-7bd1-4a50-a3dc-12c5ae8e176c",
-      "name": "Return terminal no_match without Gemini"
+      "name": "Return terminal no_match without Antigravity"
     }
   ],
   "pinData": {},
@@ -398,7 +423,7 @@
     "Fallback pages approved?": { "main": [[{ "node": "Decode fallback Markdown as UTF-8", "type": "main", "index": 0 }],[{ "node": "Return structured generalized error", "type": "main", "index": 0 }]] },
     "Decode fallback Markdown as UTF-8": { "main": [[{ "node": "Select literal fallback candidates", "type": "main", "index": 0 }]] },
     "Select literal fallback candidates": { "main": [[{ "node": "Fallback candidate found?", "type": "main", "index": 0 }]] },
-    "Fallback candidate found?": { "main": [[{ "node": "Read selected canonical pages", "type": "main", "index": 0 }],[{ "node": "Return terminal no_match without Gemini", "type": "main", "index": 0 }]] },
+    "Fallback candidate found?": { "main": [[{ "node": "Read selected canonical pages", "type": "main", "index": 0 }],[{ "node": "Return terminal no_match without Antigravity", "type": "main", "index": 0 }]] },
     "Read selected canonical pages": { "main": [[{ "node": "Validate selected canonical reads", "type": "main", "index": 0 }]] },
     "Validate selected canonical reads": { "main": [[{ "node": "Canonical pages approved?", "type": "main", "index": 0 }]] },
     "Canonical pages approved?": { "main": [[{ "node": "Decode selected canonical pages", "type": "main", "index": 0 }],[{ "node": "Return structured generalized error", "type": "main", "index": 0 }]] },
@@ -412,9 +437,9 @@
     "Decode linked sources as UTF-8": { "main": [[{ "node": "Assemble generalized evidence packet", "type": "main", "index": 0 }]] },
     "Assemble generalized evidence packet": { "main": [[{ "node": "Validate final packet bounds", "type": "main", "index": 0 }]] },
     "Validate final packet bounds": { "main": [[{ "node": "Generalized packet approved?", "type": "main", "index": 0 }]] },
-    "Generalized packet approved?": { "main": [[{ "node": "One Gemini answer call", "type": "main", "index": 0 }],[{ "node": "Return structured generalized error", "type": "main", "index": 0 }]] },
-    "Gemini 3.5 Flash": { "ai_languageModel": [[{ "node": "One Gemini answer call", "type": "ai_languageModel", "index": 0 }]] },
-    "One Gemini answer call": { "main": [[{ "node": "Return generalized answer and measurements", "type": "main", "index": 0 }]] }
+    "Generalized packet approved?": { "main": [[{ "node": "Run Antigravity answer", "type": "main", "index": 0 }],[{ "node": "Return structured generalized error", "type": "main", "index": 0 }]] },
+    "Run Antigravity answer": { "main": [[{ "node": "Validate Antigravity answer", "type": "main", "index": 0 }]] },
+    "Validate Antigravity answer": { "main": [[{ "node": "Return generalized answer and measurements", "type": "main", "index": 0 }]] }
   },
   "active": false,
   "settings": { "executionOrder": "v1", "binaryMode": "separate", "availableInMCP": false },
