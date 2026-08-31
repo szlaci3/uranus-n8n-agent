@@ -103,11 +103,14 @@ establish a general retrieval replacement. The accepted workflow artifacts
 are unchanged.
 
 The follow-up [generalized one-call experiment](docs/generalized-one-call.md)
-is prepared as `workflows/miranda-one-call-generalized.json`. It scores the
+is available as `workflows/miranda-one-call-generalized.json`. It scores the
 KB's existing canonical indexes deterministically, uses one scoped literal
 fallback only when needed, reads linked source evidence, and builds one
-bounded packet before Gemini. Static and local five-case validation pass; no
-live generalized answer result is claimed yet.
+bounded packet before Gemini. Static validation, local packet construction,
+and the initial five-case live n8n gate all pass. The four supported runs each
+used one Gemini action; the unsupported control returned terminal `no_match`
+without a model call. This remains a separate inactive experiment rather than
+a replacement for the accepted agentic workflows.
 
 ## Run locally
 
@@ -136,8 +139,9 @@ See [Local setup](docs/setup.md) for the complete procedure. Never place API key
 - The system has not been load-tested or designed for multi-tenant operation.
 - Imports require local credential selection and supporting-workflow rebinding.
 - Qwen3 8B did not satisfy the accepted Gemini retrieval and provenance contract.
-- The generalized one-call workflow has not completed its live multi-question
-  gate and remains experimental.
+- The generalized one-call workflow passed its initial five-case live gate but
+  remains experimental; the small lexical test set does not establish broad
+  semantic recall or production scalability.
 
 ## Ownership and AI assistance
 

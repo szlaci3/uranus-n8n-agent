@@ -1,8 +1,9 @@
 # Generalized one-call evidence packets
 
-**Status:** Prepared artifact. Static topology checks and local five-case
-retrieval/packet validation pass. One of five live n8n cases has passed; four
-remain for the next session.
+**Status:** Initial generalized gate passed on 2026-08-30. Static topology,
+local five-case retrieval/packet validation, and all five live n8n cases pass.
+The workflow remains a separate inactive experiment and does not replace the
+accepted agentic control.
 
 ## Decision
 
@@ -21,8 +22,9 @@ Markdown links by literal question-term overlap, follows selected pages to
 linked source records, and uses a scoped literal scan only when the indexes
 produce no plausible candidate.
 
-This is an experimental architecture revision justified by the Q4 result. It
-does not replace the accepted baseline until broader live evaluation passes.
+This is an experimental architecture revision justified by the Q4 result. Its
+initial five-case live gate now passes, but it remains separate from and does
+not replace the accepted agentic baseline.
 
 ## Retrieval contract
 
@@ -163,30 +165,76 @@ These are deterministic local retrieval results, not live n8n executions or
 Gemini answer results. Import, credential selection, execution traces, answer
 quality, token usage, and duration remain manual gates.
 
-## Live gate progress
+## Live gate results
 
-### Case 1 — direct chunking: pass
+The user ran all five exact questions through the generalized workflow on
+2026-08-30. The four supported executions each traversed the workflow's only
+Gemini action path; Retry On Fail is not configured on that path. The terminal
+unsupported execution bypassed Gemini and reported no provider-token usage.
 
-The user ran `Why does chunking matter in RAG?` through the generalized
-workflow on 2026-08-30.
+| Case | Method | Packet | Tokens | Duration | Result |
+|---|---|---:|---:|---:|---|
+| 1. Direct chunking | `deterministic_index_score` | 7,896 | 2,586 | 4.906 s | Pass |
+| 2. Chunking + knowledge bases | `deterministic_index_score` | 7,817 | 2,563 | 6.228 s | Pass |
+| 3. RAG + chunking | `deterministic_index_score` | 7,916 | 2,609 | 5.762 s | Pass |
+| 4. “Dumb zone” | `keyword_literal` (`dumb zone`) | 6,094 | 1,798 | 4.010 s | Pass |
+| 5. Kubernetes autoscaling | terminal `no_match` | — | 0 | 0.007 s | Pass |
 
-- Method: `deterministic_index_score`
-- Packet: 7,896 characters
-- Evidence route:
-  `concepts/chunking.md` → `concepts/rag.md` →
-  `sources/every-rag-strategy-explained-in-13-minutes-no-fluff.md` →
-  `sources/why-the-best-ai-coding-tools-abandoned-rag-and-what-they-use-instead.md`
-- Provider usage: 2,586 total tokens
-- Duration: 4.906 seconds
-- Answer quality: pass
-- Completeness: pass
-- Grounding: pass; every material claim is present in packet evidence
-- Provenance: pass; the Sources list exactly matches the four packet paths
+### Case 1 — direct chunking
 
-The extra `concepts/rag.md` page is relevant and was allowed by the expected
-route, so it is an efficiency observation rather than a failure. The user's
-message did not separately state “one Gemini action, no retry”; confirm that
-trace detail before final closure even though the artifact contains only one
-model path.
+Evidence route:
+`concepts/chunking.md` → `concepts/rag.md` →
+`sources/every-rag-strategy-explained-in-13-minutes-no-fluff.md` →
+`sources/why-the-best-ai-coding-tools-abandoned-rag-and-what-they-use-instead.md`.
+The answer directly explained chunking's retrieval-quality, context, and cost
+effects. Quality, completeness, grounding, and provenance passed; its Sources
+list exactly matched the four packet paths. The extra `concepts/rag.md` page
+was relevant and allowed, so it remains an efficiency observation rather than
+a failure.
 
-Cases 2–5 remain pending.
+### Case 2 — chunking and knowledge bases
+
+Evidence route:
+`concepts/chunking.md` → `concepts/knowledge-bases.md` →
+`sources/why-the-best-ai-coding-tools-abandoned-rag-and-what-they-use-instead.md` →
+`sources/your-ultimate-n8n-rag-ai-agent-template-just-got-a-massive-upgrade.md`.
+The answer covered preprocessing and storage, the two system layers,
+retrieval quality, and small-chunk efficiency. Quality, clause completeness,
+grounding, and provenance passed; its Sources list exactly matched the four
+packet paths.
+
+### Case 3 — RAG usefulness and chunking
+
+Evidence route:
+`concepts/chunking.md` → `concepts/rag.md` →
+`sources/every-rag-strategy-explained-in-13-minutes-no-fluff.md` →
+`sources/why-the-best-ai-coding-tools-abandoned-rag-and-what-they-use-instead.md`.
+The answer addressed both explicit clauses: when external retrieval is useful
+and how chunking affects preparation, quality, efficiency, and context
+preservation. Quality, clause completeness, grounding, and provenance passed;
+its Sources list exactly matched the four packet paths.
+
+### Case 4 — literal “dumb zone” fallback
+
+The quoted phrase correctly forced `keyword_literal` with literal query
+`dumb zone`. Evidence route:
+`concepts/context-rot.md` →
+`sources/are-agent-harnesses-bringing-back-vibe-coding.md`.
+The answer accurately explained bounded attention, context rot, declining
+retrieval from an overloaded window, and the cited hallucination warning.
+Quality, completeness, grounding, and provenance passed; its Sources list
+exactly matched the two packet paths.
+
+### Case 5 — unsupported Kubernetes control
+
+Index scoring found no plausible candidate. The workflow derived the one
+literal query `Kubernetes cluster autoscaling`, found zero candidates, and
+returned terminal `no_match` with no evidence. The seven-millisecond execution
+did not enter the Gemini path and reported no model-token usage. It therefore
+passed the unsupported, zero-evidence, zero-model-action boundary.
+
+Across the four supported executions, the workflow used 9,556 total tokens
+and 20.906 seconds in aggregate. These five cases establish the initial live
+gate for this deterministic selector and KB snapshot. They do not prove broad
+semantic recall, production scalability, or equivalence to the accepted
+agentic workflow on arbitrary questions.

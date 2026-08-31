@@ -114,7 +114,7 @@ total token usage, or roughly one twelfth of the control. This is a passed
 one-question experiment, not evidence that frozen deterministic routes
 generalize to arbitrary questions.
 
-## Prepared generalized one-call experiment
+## Generalized one-call experiment
 
 The user authorized generalization after the Q4 pilot passed. The prepared
 `workflows/miranda-one-call-generalized.json` keeps retrieval model-free: it
@@ -130,17 +130,30 @@ quoted Q4 phrase correctly bypasses broad `LLM` index matches, uses literal
 `dumb zone`, and builds a 6,094-character packet. Kubernetes cluster
 autoscaling returns terminal `no_match` with zero expected model actions.
 
-This proves deterministic selection and packet construction against the local
-KB snapshot. It does not prove n8n import/runtime behavior, Gemini answer
-quality, token usage, or general retrieval coverage. Those claims remain
-pending the live gate in [the generalized design](generalized-one-call.md).
+The local checks proved deterministic selection and packet construction
+against the tested KB snapshot. The subsequent live n8n gate on 2026-08-30
+passed all five exact questions:
 
-The first live generalized case now passes. `Why does chunking matter in RAG?`
-used `deterministic_index_score`, produced the expected 7,896-character packet
-with `concepts/chunking.md`, relevant `concepts/rag.md`, and two directly read
-linked source pages, then returned a grounded answer citing exactly those four
-paths. The run used 2,586 total tokens and completed in 4.906 seconds. Four
-live cases remain; this partial result does not close the generalized gate.
+| Case | Live route | Packet | Gemini actions | Tokens | Duration | Outcome |
+|---|---|---:|---:|---:|---:|---|
+| Direct chunking | `concepts/chunking.md` → `concepts/rag.md` → two linked sources | 7,896 | 1 | 2,586 | 4.906 s | Passed |
+| Chunking + knowledge bases | both canonical concepts → one linked source each | 7,817 | 1 | 2,563 | 6.228 s | Passed |
+| RAG + chunking | both canonical concepts → one linked source each | 7,916 | 1 | 2,609 | 5.762 s | Passed |
+| “Dumb zone” | literal `dumb zone` → `concepts/context-rot.md` → linked source | 6,094 | 1 | 1,798 | 4.010 s | Passed |
+| Kubernetes autoscaling | literal query → terminal `no_match`; no evidence | — | 0 | 0 | 0.007 s | Passed |
+
+All four generated answers passed quality, explicit-clause completeness,
+grounding, and provenance review. Their final Sources lists exactly matched
+the evidence paths in their packets. The unsupported control produced zero
+candidates and terminated before Gemini instead of using model knowledge.
+The supported workflow has one Gemini action path and no Retry On Fail
+configuration.
+
+The complete routes and answer assessments are recorded in
+[the generalized design](generalized-one-call.md). This closes the initial
+five-case generalized gate, not broad retrieval coverage or a production
+scalability claim. The generalized workflow remains a separate inactive
+experiment and does not replace the accepted agentic artifacts.
 
 ## Failure-driven changes
 
