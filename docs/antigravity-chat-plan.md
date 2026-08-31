@@ -11,6 +11,11 @@ The chat export is checked by the separate
 `scripts/validate-chat-antigravity.mjs` validator; the existing Gemini-oriented
 validator is not used for this artifact.
 
+Final live re-import, three-turn conversation, and new-session isolation tests
+passed on 2026-08-31. The operational summary and restart instructions are in
+`docs/antigravity-chat-handover.md`. The remainder of this document is retained
+as the design and acceptance record, so some sections use planning language.
+
 ## Objective
 
 Turn `workflows/miranda-one-call-antigravity.json` into a continuous n8n chat
