@@ -5,24 +5,18 @@
       "parameters": {},
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
-      "position": [
-        -3584,
-        656
-      ],
-      "id": "c430c19d-8706-4901-a385-17f3bdede154",
+      "position": [-1920, 0],
+      "id": "33ece8ae-1866-4bad-942c-e4f876a01de7",
       "name": "When clicking ‘Execute workflow’"
     },
     {
       "parameters": {
-        "jsCode": "return [{ json: { question: 'What does Cole mean when he says an LLM gets into \"the dumb zone\"?' } }];"
+        "jsCode": "return [{ json: { question: 'Why does chunking matter in RAG?' } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        -3360,
-        656
-      ],
-      "id": "c0351587-8344-47a0-baad-4399908272bb",
+      "position": [-1696, 0],
+      "id": "24cc279f-a852-486b-a40d-5db79c0526eb",
       "name": "Manual test — set question"
     },
     {
@@ -31,59 +25,31 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        -3136,
-        656
-      ],
-      "id": "07dd1edf-f5e7-44d6-9d75-40312f1f1d61",
+      "position": [-1472, 0],
+      "id": "78e904d9-64da-4167-87ae-c11e0c076156",
       "name": "Validate question and emit fixed indexes"
     },
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "e5b6b670-a0ec-4943-a0bd-f6237fce53c2",
-              "leftValue": "={{ $json._indexes_ready }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ],
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [{ "id": "e5b6b670-a0ec-4943-a0bd-f6237fce53c2", "leftValue": "={{ $json._indexes_ready }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } }],
           "combinator": "and"
         },
         "options": {}
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [
-        -2912,
-        656
-      ],
-      "id": "28aed9b2-8116-4191-a29f-734795c8c088",
+      "position": [-1248, 0],
+      "id": "891e82d0-2e91-41f7-ba18-1fc6da14efb4",
       "name": "Index request approved?"
     },
     {
-      "parameters": {
-        "fileSelector": "={{ $json.absolute_path }}",
-        "options": {}
-      },
+      "parameters": { "fileSelector": "={{ $json.absolute_path }}", "options": {} },
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1.1,
-      "position": [
-        -2688,
-        560
-      ],
-      "id": "6f2dfd5c-e88c-4a65-9494-596a29b89683",
+      "position": [-1024, -96],
+      "id": "99305213-c6c2-484f-93b4-42f2695239ac",
       "name": "Read fixed canonical indexes",
       "onError": "continueRegularOutput"
     },
@@ -93,64 +59,31 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        -2464,
-        560
-      ],
-      "id": "dbbf147f-efb2-47ce-9cdf-f82820aed225",
+      "position": [-800, -96],
+      "id": "cbd4e99b-395c-4f03-8ecf-d1564324c436",
       "name": "Validate fixed index reads"
     },
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "2940b74b-81f9-4a1c-b6f5-c07145fb1ea4",
-              "leftValue": "={{ $json._can_decode_indexes }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ],
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [{ "id": "2940b74b-81f9-4a1c-b6f5-c07145fb1ea4", "leftValue": "={{ $json._can_decode_indexes }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } }],
           "combinator": "and"
         },
         "options": {}
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [
-        -2240,
-        560
-      ],
-      "id": "9f9cd7a4-8522-4cb2-96e8-6a0f57429b58",
+      "position": [-576, -96],
+      "id": "06ac11f1-b0e8-4426-8bd9-0082f51428af",
       "name": "Indexes approved?"
     },
     {
-      "parameters": {
-        "operation": "text",
-        "destinationKey": "content",
-        "options": {
-          "encoding": "utf8",
-          "stripBOM": true,
-          "keepSource": "json"
-        }
-      },
+      "parameters": { "operation": "text", "destinationKey": "content", "options": { "encoding": "utf8", "stripBOM": true, "keepSource": "json" } },
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1.1,
-      "position": [
-        -2016,
-        464
-      ],
-      "id": "2e471c8c-6959-46b0-bb93-604e0f60ddbe",
+      "position": [-352, -192],
+      "id": "7018d9a7-05f3-4d87-aef5-f5ac09de6e35",
       "name": "Decode fixed indexes as UTF-8",
       "onError": "continueRegularOutput"
     },
@@ -160,59 +93,31 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        -1792,
-        464
-      ],
-      "id": "8026c4e4-9528-4ea9-babc-e142e0d90ca6",
+      "position": [-128, -192],
+      "id": "0d16ae5b-64a1-4807-8cba-5066bdfe427f",
       "name": "Select deterministic index candidates"
     },
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "fd53ea73-cb87-4fda-a334-bef741ee0ae8",
-              "leftValue": "={{ $json._needs_fallback }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ],
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [{ "id": "fd53ea73-cb87-4fda-a334-bef741ee0ae8", "leftValue": "={{ $json._needs_fallback }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } }],
           "combinator": "and"
         },
         "options": {}
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [
-        -1600,
-        464
-      ],
-      "id": "7db19108-47e0-4f02-acaf-7aa0c29255a5",
+      "position": [96, -192],
+      "id": "f9fa9a3d-11a5-4280-91f3-c6b869386623",
       "name": "Literal fallback needed?"
     },
     {
-      "parameters": {
-        "fileSelector": "={{ $json.search_glob }}",
-        "options": {}
-      },
+      "parameters": { "fileSelector": "={{ $json.search_glob }}", "options": {} },
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1.1,
-      "position": [
-        -1344,
-        256
-      ],
-      "id": "9ae40d71-e2bd-45af-940f-45b0e4b8129c",
+      "position": [320, -400],
+      "id": "710b3a3e-d658-4c62-9be4-66d64ef71f79",
       "name": "Read scoped fallback Markdown",
       "onError": "continueRegularOutput"
     },
@@ -222,64 +127,31 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        -1120,
-        256
-      ],
-      "id": "6fed61d5-c407-419a-a585-218c9851d50a",
+      "position": [544, -400],
+      "id": "6b7ee24b-50ff-4dab-af25-a89487412ad0",
       "name": "Validate scoped fallback reads"
     },
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "13904291-9e20-45ec-a260-f2926d7a1a28",
-              "leftValue": "={{ $json._fallback_ready }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ],
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [{ "id": "13904291-9e20-45ec-a260-f2926d7a1a28", "leftValue": "={{ $json._fallback_ready }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } }],
           "combinator": "and"
         },
         "options": {}
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [
-        -896,
-        256
-      ],
-      "id": "7913f228-6928-4768-b915-2ba98a028df9",
+      "position": [768, -400],
+      "id": "1e9092de-54ac-4e29-98ae-2f467839526e",
       "name": "Fallback pages approved?"
     },
     {
-      "parameters": {
-        "operation": "text",
-        "destinationKey": "content",
-        "options": {
-          "encoding": "utf8",
-          "stripBOM": true,
-          "keepSource": "json"
-        }
-      },
+      "parameters": { "operation": "text", "destinationKey": "content", "options": { "encoding": "utf8", "stripBOM": true, "keepSource": "json" } },
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1.1,
-      "position": [
-        -672,
-        160
-      ],
-      "id": "9fc51544-5dde-4252-8153-36d3ba54f657",
+      "position": [992, -496],
+      "id": "06063633-586e-41fe-90fa-c1e0f9df34c9",
       "name": "Decode fallback Markdown as UTF-8",
       "onError": "continueRegularOutput"
     },
@@ -289,59 +161,31 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        -448,
-        160
-      ],
-      "id": "17606439-a13d-4f16-b4a2-30cb750ef12b",
+      "position": [1216, -496],
+      "id": "db458a18-4833-41d2-8dd0-61be1fa72df0",
       "name": "Select literal fallback candidates"
     },
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "ae9af4bb-24bb-43bb-aa22-0b0466879b8d",
-              "leftValue": "={{ $json._has_candidate }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ],
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [{ "id": "ae9af4bb-24bb-43bb-aa22-0b0466879b8d", "leftValue": "={{ $json._has_candidate }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } }],
           "combinator": "and"
         },
         "options": {}
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [
-        -224,
-        160
-      ],
-      "id": "7657d500-d022-47fc-9461-b8b9c1f1883c",
+      "position": [1440, -496],
+      "id": "41de7526-a189-431c-9b5a-5df300f35cb9",
       "name": "Fallback candidate found?"
     },
     {
-      "parameters": {
-        "fileSelector": "={{ $json.absolute_path }}",
-        "options": {}
-      },
+      "parameters": { "fileSelector": "={{ $json.absolute_path }}", "options": {} },
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1.1,
-      "position": [
-        -3600,
-        1024
-      ],
-      "id": "99ab8008-c55d-45e4-b27f-d6bf3d9317e9",
+      "position": [1664, -192],
+      "id": "7709b9e0-b883-444f-ad65-41a2f999f64c",
       "name": "Read selected canonical pages",
       "onError": "continueRegularOutput"
     },
@@ -351,64 +195,31 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        -3360,
-        1024
-      ],
-      "id": "ecf5b23c-8ef5-4a1e-b923-f3690ac57eb2",
+      "position": [1888, -192],
+      "id": "7fc8a1e1-89cc-464d-8172-c4fc8747f067",
       "name": "Validate selected canonical reads"
     },
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "33f48d28-67ef-44e5-83fb-0ae80ed83d92",
-              "leftValue": "={{ $json._canonical_ready }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ],
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [{ "id": "33f48d28-67ef-44e5-83fb-0ae80ed83d92", "leftValue": "={{ $json._canonical_ready }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } }],
           "combinator": "and"
         },
         "options": {}
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [
-        -3136,
-        1024
-      ],
-      "id": "0be6db87-e92d-4293-a3e3-720d7c546837",
+      "position": [2112, -192],
+      "id": "a92f5a6e-4f62-4655-9271-67ed1dfb3267",
       "name": "Canonical pages approved?"
     },
     {
-      "parameters": {
-        "operation": "text",
-        "destinationKey": "content",
-        "options": {
-          "encoding": "utf8",
-          "stripBOM": true,
-          "keepSource": "json"
-        }
-      },
+      "parameters": { "operation": "text", "destinationKey": "content", "options": { "encoding": "utf8", "stripBOM": true, "keepSource": "json" } },
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1.1,
-      "position": [
-        -2912,
-        928
-      ],
-      "id": "6cedbbdb-ac49-4b24-93bb-ec7303770d4b",
+      "position": [2336, -288],
+      "id": "20f2fa4e-ccca-4525-88e8-b3972b1d6967",
       "name": "Decode selected canonical pages",
       "onError": "continueRegularOutput"
     },
@@ -418,72 +229,39 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        -2688,
-        928
-      ],
-      "id": "9af6a752-f6bb-44b4-a55e-1f5d206f6124",
+      "position": [2560, -288],
+      "id": "e22cd86e-5b36-45a0-818c-811a8d3ac335",
       "name": "Prepare canonical evidence and source requests"
     },
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "647a6fa8-ff6d-480d-9322-4516e7178796",
-              "leftValue": "={{ $json._has_sources }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ],
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [{ "id": "647a6fa8-ff6d-480d-9322-4516e7178796", "leftValue": "={{ $json._has_sources }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } }],
           "combinator": "and"
         },
         "options": {}
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [
-        -2464,
-        928
-      ],
-      "id": "45106b4b-deb6-40ea-8ff8-643d9a00889c",
+      "position": [2784, -288],
+      "id": "19b6524a-6901-4b04-b859-a42daf95f969",
       "name": "Linked sources required?"
     },
     {
-      "parameters": {
-        "jsCode": "const prepared=$input.first().json;return prepared.source_requests.map((request,source_order)=>({json:{...request,source_order,_source_request:true}}));"
-      },
+      "parameters": { "jsCode": "const prepared=$input.first().json;return prepared.source_requests.map((request,source_order)=>({json:{...request,source_order,_source_request:true}}));" },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        -2240,
-        784
-      ],
-      "id": "77e392a7-5f3c-47ee-908c-efe896d3a608",
+      "position": [3008, -432],
+      "id": "aa9847ec-8cf5-449b-b165-cba1a2fb9a14",
       "name": "Emit linked source requests"
     },
     {
-      "parameters": {
-        "fileSelector": "={{ $json.absolute_path }}",
-        "options": {}
-      },
+      "parameters": { "fileSelector": "={{ $json.absolute_path }}", "options": {} },
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1.1,
-      "position": [
-        -2016,
-        784
-      ],
-      "id": "08c46efb-c56b-44b9-a82a-14f4660fb010",
+      "position": [3232, -432],
+      "id": "698d9ac0-366b-43d2-badb-6cc7dd3edc24",
       "name": "Read linked source pages",
       "onError": "continueRegularOutput"
     },
@@ -493,64 +271,31 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        -1792,
-        784
-      ],
-      "id": "bfbb84d0-f3e3-4358-9803-8bd4160c59a3",
+      "position": [3456, -432],
+      "id": "e90022b1-febd-4676-836e-9be7328cb803",
       "name": "Validate linked source reads"
     },
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "3a583961-2924-44d6-b442-81e4f44dad37",
-              "leftValue": "={{ $json._sources_ready }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ],
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [{ "id": "3a583961-2924-44d6-b442-81e4f44dad37", "leftValue": "={{ $json._sources_ready }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } }],
           "combinator": "and"
         },
         "options": {}
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [
-        -1568,
-        784
-      ],
-      "id": "44169e0f-5bdf-458e-b3e8-ad489002848a",
+      "position": [3680, -432],
+      "id": "a0bf8a23-c605-4c37-8296-dd4a2ddab5bd",
       "name": "Linked sources approved?"
     },
     {
-      "parameters": {
-        "operation": "text",
-        "destinationKey": "content",
-        "options": {
-          "encoding": "utf8",
-          "stripBOM": true,
-          "keepSource": "json"
-        }
-      },
+      "parameters": { "operation": "text", "destinationKey": "content", "options": { "encoding": "utf8", "stripBOM": true, "keepSource": "json" } },
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1.1,
-      "position": [
-        -1344,
-        688
-      ],
-      "id": "5a49adac-5399-44c8-823d-fa6fc29bd1eb",
+      "position": [3904, -528],
+      "id": "09c1d5d3-2997-4476-becb-72d859e5b498",
       "name": "Decode linked sources as UTF-8",
       "onError": "continueRegularOutput"
     },
@@ -560,45 +305,23 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        -1120,
-        928
-      ],
-      "id": "6de29134-e9b8-4425-bc07-03b7548d64ee",
+      "position": [4128, -288],
+      "id": "ef92ea00-8a72-4236-a424-cdcf4d22b479",
       "name": "Assemble generalized evidence packet"
     },
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "ae1cc824-e395-414a-aa49-62a256e000f7",
-              "leftValue": "={{ $json._packet_ready }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ],
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [{ "id": "ae1cc824-e395-414a-aa49-62a256e000f7", "leftValue": "={{ $json._packet_ready }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } }],
           "combinator": "and"
         },
         "options": {}
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [
-        -896,
-        928
-      ],
-      "id": "32ccb01f-5b5b-4392-bf6e-635a2fe289d8",
+      "position": [4352, -288],
+      "id": "4fdab809-0246-464f-a822-7e4c0b67f95d",
       "name": "Generalized packet approved?"
     },
     {
@@ -607,89 +330,44 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        -1008,
-        928
-      ],
-      "id": "641b780c-8c39-43f2-94e5-47f3347d2528",
+      "position": [4240, -288],
+      "id": "45f28bdf-4d73-4f91-8dfc-e096248d281c",
       "name": "Validate final packet bounds"
     },
     {
-      "parameters": {
-        "method": "POST",
-        "url": "https://generativelanguage.googleapis.com/v1beta/interactions",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "contentType": "raw",
-        "rawContentType": "application/json",
-        "body": "={{ JSON.stringify({ agent: 'antigravity-preview-05-2026', input: $json.model_prompt, environment: 'remote', tools: [], agent_config: { type: 'antigravity', max_total_tokens: 20000 } }) }}",
-        "options": {
-          "timeout": 300000
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        -672,
-        832
-      ],
-      "id": "1a6fae11-a9c4-4690-9d7c-969c7231a238",
-      "name": "Run Antigravity answer",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "U4ZjJhyn4PsnZLwA",
-          "name": "Header Auth account"
-        }
-      },
-      "onError": "continueRegularOutput"
+      "parameters": { "promptType": "define", "text": "={{ $json.model_prompt }}" },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [4576, -384],
+      "id": "2acd9294-532f-45af-af62-6eff988908fa",
+      "name": "One Gemini answer call"
+    },
+    {
+      "parameters": { "modelName": "models/gemini-3.5-flash", "options": {} },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [4576, -160],
+      "id": "dc72934f-9d5b-4c20-b5a0-7be2ea0f2318",
+      "name": "Gemini 3.5 Flash"
     },
     {
       "parameters": {
-        "jsCode": "const packet=$('Assemble generalized evidence packet').first().json;const result=$input.first().json??{};const status=result.status;const model='antigravity-preview-05-2026';if(result.error){return [{json:{status:'error',error_code:'ANTIGRAVITY_REQUEST_FAILED',message:typeof result.error==='string'?result.error:(result.error.message??'Antigravity request failed.'),model,model_called:true,interaction_status:status??null}}];}if(status==='failed'||status==='incomplete'||status==='requires_action'){return [{json:{status:'error',error_code:`ANTIGRAVITY_${String(status).toUpperCase()}`,message:result.error?.message??`Antigravity interaction ended with status ${status}.`,model,model_called:true,interaction_status:status}}];}const answer=(result.steps??[]).filter(step=>step.type==='model_output').flatMap(step=>step.content??[]).filter(part=>part.type==='text').map(part=>part.text).join('\\n\\n').trim();if(status!=='completed'||!answer)return [{json:{status:'error',error_code:'MODEL_OUTPUT_MISSING',message:'Antigravity returned no completed text answer.',model,model_called:true,interaction_status:status??null}}];return [{json:{status:'success',text:answer,model,interaction_status:status,interaction_id:result.id??null,usage:result.usage??null}}];"
+        "jsCode": "const packet=$('Assemble generalized evidence packet').first().json,result=$input.first().json;const answer=typeof result.text==='string'?result.text:(typeof result.output==='string'?result.output:null);if(!answer)return [{json:{status:'error',error_code:'MODEL_OUTPUT_MISSING',message:'The one-call model node returned no text answer.'}}];return [{json:{status:'success',question:packet.question,selection_method:packet.selection_method,literal_query:packet.literal_query,model:'models/gemini-3.5-flash',expected_model_actions_on_success:1,packet_characters:packet.packet_characters,evidence_paths:packet.evidence_paths,answer,measurement_note:'Confirm one Gemini action, provider token usage, duration, grounding, completeness, and Sources from this execution.'}}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        -448,
-        832
-      ],
-      "id": "fc90b3a6-068d-4057-82f1-2503be448332",
-      "name": "Validate Antigravity answer"
-    },
-    {
-      "parameters": {
-        "jsCode": "const packet=$('Assemble generalized evidence packet').first().json,result=$input.first().json??{};if(result.status!=='success'||typeof result.text!=='string'||!result.text.trim())return [{json:{status:'error',error_code:result.error_code??'MODEL_OUTPUT_MISSING',message:result.message??'Antigravity returned no text answer.',model_called:true,interaction_status:result.interaction_status??null}}];return [{json:{status:'success',question:packet.question,selection_method:packet.selection_method,literal_query:packet.literal_query,model:result.model??'antigravity-preview-05-2026',expected_model_actions_on_success:1,packet_characters:packet.packet_characters,evidence_paths:packet.evidence_paths,answer:result.text,interaction_id:result.interaction_id??null,interaction_status:result.interaction_status??null,usage:result.usage??null,measurement_note:'Confirm one Antigravity interaction, provider token usage, duration, grounding, completeness, and Sources from this execution.'}}];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -224,
-        832
-      ],
-      "id": "bd82da6d-0c3a-4cfa-b37d-9566f935135d",
+      "position": [4800, -384],
+      "id": "15eebbd8-d6a1-4a2b-8829-437274a1dfd0",
       "name": "Return generalized answer and measurements"
     },
     {
       "parameters": {
-        "jsCode": "const current=$input.first().json;return [{json:{status:'error',error_code:current.error_code??'GENERALIZED_VALIDATION_FAILED',message:current.message??'Deterministic validation stopped before Antigravity.',model_called:false}}];"
+        "jsCode": "const current=$input.first().json;return [{json:{status:'error',error_code:current.error_code??'GENERALIZED_VALIDATION_FAILED',message:current.message??'Deterministic validation stopped before Gemini.',model_called:false}}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        -672,
-        1312
-      ],
-      "id": "22a3e92d-7918-4101-aaa5-f8cb8994688c",
+      "position": [4576, 96],
+      "id": "ce33e8c3-29e8-4a6e-a5c9-12f736e50a48",
       "name": "Return structured generalized error"
     },
     {
@@ -698,442 +376,48 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        -16,
-        320
-      ],
-      "id": "369cc540-94a8-46cb-8997-c3a037dec2f1",
-      "name": "Return terminal no_match without Antigravity"
+      "position": [1664, -656],
+      "id": "af46978e-7bd1-4a50-a3dc-12c5ae8e176c",
+      "name": "Return terminal no_match without Gemini"
     }
   ],
   "pinData": {},
   "connections": {
-    "When clicking ‘Execute workflow’": {
-      "main": [
-        [
-          {
-            "node": "Manual test — set question",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Manual test — set question": {
-      "main": [
-        [
-          {
-            "node": "Validate question and emit fixed indexes",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Validate question and emit fixed indexes": {
-      "main": [
-        [
-          {
-            "node": "Index request approved?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Index request approved?": {
-      "main": [
-        [
-          {
-            "node": "Read fixed canonical indexes",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Return structured generalized error",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Read fixed canonical indexes": {
-      "main": [
-        [
-          {
-            "node": "Validate fixed index reads",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Validate fixed index reads": {
-      "main": [
-        [
-          {
-            "node": "Indexes approved?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Indexes approved?": {
-      "main": [
-        [
-          {
-            "node": "Decode fixed indexes as UTF-8",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Return structured generalized error",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Decode fixed indexes as UTF-8": {
-      "main": [
-        [
-          {
-            "node": "Select deterministic index candidates",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Select deterministic index candidates": {
-      "main": [
-        [
-          {
-            "node": "Literal fallback needed?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Literal fallback needed?": {
-      "main": [
-        [
-          {
-            "node": "Read scoped fallback Markdown",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Read selected canonical pages",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Read scoped fallback Markdown": {
-      "main": [
-        [
-          {
-            "node": "Validate scoped fallback reads",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Validate scoped fallback reads": {
-      "main": [
-        [
-          {
-            "node": "Fallback pages approved?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Fallback pages approved?": {
-      "main": [
-        [
-          {
-            "node": "Decode fallback Markdown as UTF-8",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Return structured generalized error",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Decode fallback Markdown as UTF-8": {
-      "main": [
-        [
-          {
-            "node": "Select literal fallback candidates",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Select literal fallback candidates": {
-      "main": [
-        [
-          {
-            "node": "Fallback candidate found?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Fallback candidate found?": {
-      "main": [
-        [
-          {
-            "node": "Read selected canonical pages",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Return terminal no_match without Antigravity",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Read selected canonical pages": {
-      "main": [
-        [
-          {
-            "node": "Validate selected canonical reads",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Validate selected canonical reads": {
-      "main": [
-        [
-          {
-            "node": "Canonical pages approved?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Canonical pages approved?": {
-      "main": [
-        [
-          {
-            "node": "Decode selected canonical pages",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Return structured generalized error",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Decode selected canonical pages": {
-      "main": [
-        [
-          {
-            "node": "Prepare canonical evidence and source requests",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Prepare canonical evidence and source requests": {
-      "main": [
-        [
-          {
-            "node": "Linked sources required?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Linked sources required?": {
-      "main": [
-        [
-          {
-            "node": "Emit linked source requests",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Assemble generalized evidence packet",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Emit linked source requests": {
-      "main": [
-        [
-          {
-            "node": "Read linked source pages",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Read linked source pages": {
-      "main": [
-        [
-          {
-            "node": "Validate linked source reads",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Validate linked source reads": {
-      "main": [
-        [
-          {
-            "node": "Linked sources approved?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Linked sources approved?": {
-      "main": [
-        [
-          {
-            "node": "Decode linked sources as UTF-8",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Return structured generalized error",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Decode linked sources as UTF-8": {
-      "main": [
-        [
-          {
-            "node": "Assemble generalized evidence packet",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Assemble generalized evidence packet": {
-      "main": [
-        [
-          {
-            "node": "Validate final packet bounds",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Validate final packet bounds": {
-      "main": [
-        [
-          {
-            "node": "Generalized packet approved?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Generalized packet approved?": {
-      "main": [
-        [
-          {
-            "node": "Run Antigravity answer",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Return structured generalized error",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Run Antigravity answer": {
-      "main": [
-        [
-          {
-            "node": "Validate Antigravity answer",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Validate Antigravity answer": {
-      "main": [
-        [
-          {
-            "node": "Return generalized answer and measurements",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
+    "When clicking ‘Execute workflow’": { "main": [[{ "node": "Manual test — set question", "type": "main", "index": 0 }]] },
+    "Manual test — set question": { "main": [[{ "node": "Validate question and emit fixed indexes", "type": "main", "index": 0 }]] },
+    "Validate question and emit fixed indexes": { "main": [[{ "node": "Index request approved?", "type": "main", "index": 0 }]] },
+    "Index request approved?": { "main": [[{ "node": "Read fixed canonical indexes", "type": "main", "index": 0 }],[{ "node": "Return structured generalized error", "type": "main", "index": 0 }]] },
+    "Read fixed canonical indexes": { "main": [[{ "node": "Validate fixed index reads", "type": "main", "index": 0 }]] },
+    "Validate fixed index reads": { "main": [[{ "node": "Indexes approved?", "type": "main", "index": 0 }]] },
+    "Indexes approved?": { "main": [[{ "node": "Decode fixed indexes as UTF-8", "type": "main", "index": 0 }],[{ "node": "Return structured generalized error", "type": "main", "index": 0 }]] },
+    "Decode fixed indexes as UTF-8": { "main": [[{ "node": "Select deterministic index candidates", "type": "main", "index": 0 }]] },
+    "Select deterministic index candidates": { "main": [[{ "node": "Literal fallback needed?", "type": "main", "index": 0 }]] },
+    "Literal fallback needed?": { "main": [[{ "node": "Read scoped fallback Markdown", "type": "main", "index": 0 }],[{ "node": "Read selected canonical pages", "type": "main", "index": 0 }]] },
+    "Read scoped fallback Markdown": { "main": [[{ "node": "Validate scoped fallback reads", "type": "main", "index": 0 }]] },
+    "Validate scoped fallback reads": { "main": [[{ "node": "Fallback pages approved?", "type": "main", "index": 0 }]] },
+    "Fallback pages approved?": { "main": [[{ "node": "Decode fallback Markdown as UTF-8", "type": "main", "index": 0 }],[{ "node": "Return structured generalized error", "type": "main", "index": 0 }]] },
+    "Decode fallback Markdown as UTF-8": { "main": [[{ "node": "Select literal fallback candidates", "type": "main", "index": 0 }]] },
+    "Select literal fallback candidates": { "main": [[{ "node": "Fallback candidate found?", "type": "main", "index": 0 }]] },
+    "Fallback candidate found?": { "main": [[{ "node": "Read selected canonical pages", "type": "main", "index": 0 }],[{ "node": "Return terminal no_match without Gemini", "type": "main", "index": 0 }]] },
+    "Read selected canonical pages": { "main": [[{ "node": "Validate selected canonical reads", "type": "main", "index": 0 }]] },
+    "Validate selected canonical reads": { "main": [[{ "node": "Canonical pages approved?", "type": "main", "index": 0 }]] },
+    "Canonical pages approved?": { "main": [[{ "node": "Decode selected canonical pages", "type": "main", "index": 0 }],[{ "node": "Return structured generalized error", "type": "main", "index": 0 }]] },
+    "Decode selected canonical pages": { "main": [[{ "node": "Prepare canonical evidence and source requests", "type": "main", "index": 0 }]] },
+    "Prepare canonical evidence and source requests": { "main": [[{ "node": "Linked sources required?", "type": "main", "index": 0 }]] },
+    "Linked sources required?": { "main": [[{ "node": "Emit linked source requests", "type": "main", "index": 0 }],[{ "node": "Assemble generalized evidence packet", "type": "main", "index": 0 }]] },
+    "Emit linked source requests": { "main": [[{ "node": "Read linked source pages", "type": "main", "index": 0 }]] },
+    "Read linked source pages": { "main": [[{ "node": "Validate linked source reads", "type": "main", "index": 0 }]] },
+    "Validate linked source reads": { "main": [[{ "node": "Linked sources approved?", "type": "main", "index": 0 }]] },
+    "Linked sources approved?": { "main": [[{ "node": "Decode linked sources as UTF-8", "type": "main", "index": 0 }],[{ "node": "Return structured generalized error", "type": "main", "index": 0 }]] },
+    "Decode linked sources as UTF-8": { "main": [[{ "node": "Assemble generalized evidence packet", "type": "main", "index": 0 }]] },
+    "Assemble generalized evidence packet": { "main": [[{ "node": "Validate final packet bounds", "type": "main", "index": 0 }]] },
+    "Validate final packet bounds": { "main": [[{ "node": "Generalized packet approved?", "type": "main", "index": 0 }]] },
+    "Generalized packet approved?": { "main": [[{ "node": "One Gemini answer call", "type": "main", "index": 0 }],[{ "node": "Return structured generalized error", "type": "main", "index": 0 }]] },
+    "Gemini 3.5 Flash": { "ai_languageModel": [[{ "node": "One Gemini answer call", "type": "ai_languageModel", "index": 0 }]] },
+    "One Gemini answer call": { "main": [[{ "node": "Return generalized answer and measurements", "type": "main", "index": 0 }]] }
   },
   "active": false,
-  "settings": {
-    "executionOrder": "v1",
-    "binaryMode": "separate"
-  },
-  "versionId": "456854db-4a6b-4d7e-935b-e216656929dc",
-  "meta": {
-    "instanceId": "1f8a4394cb5a343a949d2babea27e968d6b9a9fa00528b9d7dc40dc7f0483b60"
-  },
+  "settings": { "executionOrder": "v1", "binaryMode": "separate", "availableInMCP": false },
   "nodeGroups": [],
-  "id": "Bynt35j4WTSF4ioq",
   "tags": []
 }
