@@ -1,0 +1,190 @@
+{
+  "name": "uranus-n8n-memory-probe",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "mode": "webhook",
+        "authentication": "none",
+        "options": {
+          "loadPreviousSession": "memory",
+          "responseMode": "lastNode"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "9ff8cbb7-8cbc-4f05-af09-1211215d0509",
+      "name": "When chat message received",
+      "webhookId": "725a55d7-c928-4df4-a4d5-1f84e50900d0"
+    },
+    {
+      "parameters": {
+        "mode": "load",
+        "simplifyOutput": true,
+        "options": {
+          "groupMessages": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryManager",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        0
+      ],
+      "id": "18f65278-dc53-4fd2-a580-af9c87db69ce",
+      "name": "Load prior session messages",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const trigger = $('When chat message received').first().json;\nconst chatInput = typeof trigger.chatInput === 'string' ? trigger.chatInput : '';\nconst sessionId = typeof trigger.sessionId === 'string' ? trigger.sessionId : '';\nconst loadedItems = $input.all().map((item) => item.json);\n\nconst visible = [];\nfor (const item of loadedItems) {\n  if (!Array.isArray(item.messages)) continue;\n  for (const message of item.messages) {\n    if (typeof message.human === 'string') {\n      visible.push({ sender: 'human', text: message.human });\n    }\n    if (typeof message.ai === 'string') {\n      visible.push({ sender: 'ai', text: message.ai });\n    }\n    if (message.human === undefined && message.ai === undefined) {\n      const sender = message.sender ?? message.type ?? message.role ?? 'unknown';\n      const text = message.text ?? message.message ?? message.content ?? '';\n      visible.push({ sender, text });\n    }\n  }\n}\n\nconst interactionCount = loadedItems.reduce((total, item) => {\n  return total + (Number.isInteger(item.messagesCount) ? item.messagesCount : 0);\n}, 0);\nconst output = `Memory probe loaded ${interactionCount} prior interaction(s) containing ${visible.length} visible message(s). Current message: ${chatInput}`;\n\nreturn [{\n  json: {\n    status: 'success',\n    output,\n    sessionId,\n    chatInput,\n    priorInteractionCount: interactionCount,\n    loadedHistory: visible,\n    rawLoadOutput: loadedItems\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ],
+      "id": "0344c335-b8c1-4a8f-895a-7b7f5e508521",
+      "name": "Build probe reply"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "insertMode": "insert",
+        "messages": {
+          "messageValues": [
+            {
+              "type": "user",
+              "message": "={{ $('Build probe reply').first().json.chatInput }}",
+              "hideFromUI": false
+            },
+            {
+              "type": "ai",
+              "message": "={{ $('Build probe reply').first().json.output }}",
+              "hideFromUI": false
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryManager",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        0
+      ],
+      "id": "f5bbdc84-dbc8-48ed-8eb1-765039382d4a",
+      "name": "Insert visible turn"
+    },
+    {
+      "parameters": {
+        "jsCode": "const prepared = $('Build probe reply').first().json;\nreturn [{\n  json: {\n    ...prepared,\n    memoryInsertOutput: $input.all().map((item) => item.json)\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        0
+      ],
+      "id": "a27f11cc-d111-4c50-9a28-6b0d4d259de0",
+      "name": "Return chat response"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "fromInput",
+        "sessionKey": "={{ $json.sessionId }}",
+        "contextWindowLength": 16
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        480,
+        272
+      ],
+      "id": "51cb0b27-58ad-4ddc-9607-97d4b04130db",
+      "name": "Probe Simple Memory"
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Load prior session messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load prior session messages": {
+      "main": [
+        [
+          {
+            "node": "Build probe reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build probe reply": {
+      "main": [
+        [
+          {
+            "node": "Insert visible turn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert visible turn": {
+      "main": [
+        [
+          {
+            "node": "Return chat response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Probe Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "When chat message received",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "Load prior session messages",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "Insert visible turn",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "8d0d9f13-028a-4f83-a721-e7a014286a91",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "MemProbeUranus01",
+  "tags": []
+}
