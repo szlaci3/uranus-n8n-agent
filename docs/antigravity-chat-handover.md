@@ -23,7 +23,7 @@ Keep these files separate:
 
 - `workflows/miranda-chat-antigravity.json` is the current continuous-chat
   Antigravity implementation.
-- `workflows/miranda-one-call-antigravity.json` is the frozen stateless
+- `workflows/miranda-one-call-generalized.json` is the frozen stateless
   Antigravity comparison baseline. Do not retrofit chat or memory into it.
 - `workflows/miranda-one-call-gemini.json` is the frozen Gemini comparison
   copy.
@@ -181,4 +181,3 @@ These are optional future projects, not incomplete acceptance items:
 Do not use Antigravity `previous_interaction_id` or reuse a remote environment
 as conversation memory. That would mix prior model state into the current turn
 and weaken the fresh-evidence boundary.
-

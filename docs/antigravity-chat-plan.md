@@ -4,7 +4,7 @@
 `workflows/miranda-chat-antigravity.json` (inactive export).
 
 The one-call Antigravity workflow remains the frozen comparison baseline:
-`workflows/miranda-one-call-antigravity.json`. The Gemini workflow, its
+`workflows/miranda-one-call-generalized.json`. The Gemini workflow, its
 validator, and Gemini-focused documentation are intentionally unchanged.
 
 The chat export is checked by the separate
@@ -18,7 +18,7 @@ as the design and acceptance record, so some sections use planning language.
 
 ## Objective
 
-Turn `workflows/miranda-one-call-antigravity.json` into a continuous n8n chat
+Turn `workflows/miranda-one-call-generalized.json` into a continuous n8n chat
 workflow while preserving the deterministic knowledge-base boundary.
 
 The workflow must understand conversational follow-ups such as:
