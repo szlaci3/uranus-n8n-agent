@@ -8,10 +8,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2720,
-        432
+        1200,
+        240
       ],
-      "id": "1896cc1a-a000-4677-81e8-52a88bcaef14",
+      "id": "08286836-b142-42ff-881b-fb29bd5378ab",
       "name": "Validate question and emit fixed indexes"
     },
     {
@@ -42,10 +42,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -2496,
-        432
+        1392,
+        240
       ],
-      "id": "e27d909c-d8ee-4002-b87a-790540764467",
+      "id": "43ae9388-8c6a-41d7-9d17-9e5683e79b45",
       "name": "Index request approved?"
     },
     {
@@ -56,10 +56,10 @@
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1.1,
       "position": [
-        -2272,
-        336
+        1584,
+        240
       ],
-      "id": "a111ce11-3931-4aaf-b5d1-cb63ea98b9ba",
+      "id": "2665af81-2394-49eb-a3aa-6a47c7160f97",
       "name": "Read fixed canonical indexes",
       "onError": "continueRegularOutput"
     },
@@ -70,10 +70,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2048,
-        336
+        1760,
+        240
       ],
-      "id": "59b9c830-cd8d-4e3e-86d6-2f34900806dc",
+      "id": "70b4f42d-9bdd-40a2-9d51-61c773baeb8a",
       "name": "Validate fixed index reads"
     },
     {
@@ -104,10 +104,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -1824,
-        336
+        1920,
+        240
       ],
-      "id": "0b93ad4b-c3ba-4092-a4cd-62b311f57cdc",
+      "id": "7d6cb5c1-1863-4573-838b-4d0648078583",
       "name": "Indexes approved?"
     },
     {
@@ -123,10 +123,10 @@
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1.1,
       "position": [
-        -1600,
+        2096,
         240
       ],
-      "id": "1a7ce9fd-c700-4a56-83f5-24dc3e361843",
+      "id": "4ccc0d24-2607-41f2-a192-e0e834536fa9",
       "name": "Decode fixed indexes as UTF-8",
       "onError": "continueRegularOutput"
     },
@@ -137,10 +137,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1376,
-        240
+        2240,
+        256
       ],
-      "id": "62958091-9f2e-42c0-b772-b2546ef075c0",
+      "id": "1780af24-f74c-4de2-bcee-df3fd8c85938",
       "name": "Select deterministic index candidates"
     },
     {
@@ -171,10 +171,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -1184,
-        240
+        2384,
+        224
       ],
-      "id": "d4c9906c-6a3a-43a1-9ab1-47db94ed675f",
+      "id": "26881b92-47f4-4cc3-9c9e-9e446d841cb7",
       "name": "Literal fallback needed?"
     },
     {
@@ -185,10 +185,10 @@
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1.1,
       "position": [
-        -928,
-        32
+        2560,
+        240
       ],
-      "id": "379d84ac-5960-410e-ba92-e938e5cf9fee",
+      "id": "8176f949-3193-4ea3-ab6b-e696365cc74a",
       "name": "Read scoped fallback Markdown",
       "onError": "continueRegularOutput"
     },
@@ -199,10 +199,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -704,
-        32
+        2720,
+        224
       ],
-      "id": "9e756a25-aedd-4732-b2dd-b421902eb38e",
+      "id": "f2e679ca-eb45-41a2-91dd-5c667081e8ed",
       "name": "Validate scoped fallback reads"
     },
     {
@@ -233,10 +233,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -480,
-        32
+        32,
+        496
       ],
-      "id": "9ab2a7e7-c541-4e0c-b29f-7a7e7a7237eb",
+      "id": "a799e890-2560-4bed-ac56-3bcbcbba239b",
       "name": "Fallback pages approved?"
     },
     {
@@ -252,10 +252,10 @@
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1.1,
       "position": [
-        -256,
-        -64
+        224,
+        432
       ],
-      "id": "8b755aa0-ce8c-4ecd-a6ee-69ec48d2a28d",
+      "id": "b806f5dc-eee0-43b0-b011-233a058a70da",
       "name": "Decode fallback Markdown as UTF-8",
       "onError": "continueRegularOutput"
     },
@@ -266,10 +266,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -32,
-        -64
+        448,
+        432
       ],
-      "id": "ba2d1b31-4690-4435-b715-77d754ab5c3c",
+      "id": "c7ca91ca-9603-4954-ba9e-426662d09360",
       "name": "Select literal fallback candidates"
     },
     {
@@ -300,10 +300,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        192,
-        -64
+        672,
+        432
       ],
-      "id": "05a9d7b1-9e46-4a65-8c2e-f7b7d3b8ee26",
+      "id": "d5bafa12-a110-4e0d-902a-53687563a47a",
       "name": "Fallback candidate found?"
     },
     {
@@ -314,10 +314,10 @@
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1.1,
       "position": [
-        -3184,
-        800
+        848,
+        432
       ],
-      "id": "057ab69c-fc0f-4234-ab2a-e71e7c12ca2e",
+      "id": "c0adf2be-b206-456a-8666-e4b7f5222e77",
       "name": "Read selected canonical pages",
       "onError": "continueRegularOutput"
     },
@@ -328,10 +328,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2944,
-        800
+        992,
+        464
       ],
-      "id": "e3c82b14-a152-41cc-83c7-db936ac6b41d",
+      "id": "9d01f769-9230-4f28-ad24-1d7daf6936e4",
       "name": "Validate selected canonical reads"
     },
     {
@@ -362,10 +362,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -2720,
-        800
+        1152,
+        464
       ],
-      "id": "18fb3274-718f-4030-a5b5-84b1ef74b89b",
+      "id": "bbc6e67e-5070-45af-9a94-fae8f6b977e6",
       "name": "Canonical pages approved?"
     },
     {
@@ -381,25 +381,12 @@
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1.1,
       "position": [
-        -2496,
-        704
+        1312,
+        448
       ],
-      "id": "f50784ce-6606-49cd-a6f4-2495d9e2ac7f",
+      "id": "2c94c558-8715-4cf5-8aba-31a45db4c674",
       "name": "Decode selected canonical pages",
       "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "jsCode": "const KB_ROOT='/home/node/.n8n-files/Uranus/knowledge/cole-medin-knowledge-base';const SOURCE_ROOT='knowledge/cole-medin-knowledge-base';const MAX_BYTES=131072,MAX_EXCERPT=5000;const STOP=new Set(['a','an','and','are','as','at','be','by','cole','does','for','from','how','i','in','into','is','it','mean','means','of','on','or','recommend','says','that','the','their','to','what','when','why','with']);function norm(t){let v=t.toLowerCase();if(v.length>5&&v.endsWith('ies'))v=`${v.slice(0,-3)}y`;else if(v.length>4&&v.endsWith('ses'))v=v.slice(0,-1);else if(v.length>4&&v.endsWith('s')&&!v.endsWith('ss'))v=v.slice(0,-1);return v;}function toks(v){return [...new Set((v.toLowerCase().match(/[\\p{L}\\p{N}]+/gu)??[]).map(norm).filter((t)=>t.length>=2&&!STOP.has(t)))];}function body(c){if(!c.startsWith('---'))return c.trim();const m=c.match(/^---\\r?\\n[\\s\\S]*?\\r?\\n---\\r?\\n/);return m?c.slice(m[0].length).trim():'';}function opening(c){const b=body(c),at=b.search(/\\r?\\n##\\s/);return (at===-1?b:b.slice(0,at)).trim();}function source(c,q){const b=body(c),at=b.search(/\\r?\\n## Sources\\s*\\r?\\n/);if(at===-1)return null;const out=[];for(const [order,line] of b.slice(at).split(/\\r?\\n/).entries()){const m=line.match(/^\\s*-\\s+\\[[^\\]]+]\\(\\.\\.\\/sources\\/([A-Za-z0-9][A-Za-z0-9_-]*\\.md)\\)/);if(!m)continue;const lt=new Set(toks(line));out.push({kb_path:`sources/${m[1]}`,line:line.trim(),overlap:q.filter((t)=>lt.has(t)).length,order});}out.sort((a,b)=>b.overlap-a.overlap||a.order-b.order||a.kb_path.localeCompare(b.kb_path));return out[0]??null;}const question=$('Validate question and emit fixed indexes').first().json.question.trim(),q=toks(question),items=$input.all(),canonical=[],requests=new Map();for(const item of items){const c=item.json;if(typeof c.error==='string'||typeof c.content!=='string'||c.content.includes('�'))return [{json:{status:'error',error_code:'CANONICAL_DECODE_FAILED',message:'A selected canonical page could not be decoded as UTF-8.',_has_sources:false,_packet_ready:false}}];const excerpt=opening(c.content);if(!excerpt||excerpt.length>MAX_EXCERPT)return [{json:{status:'error',error_code:'CANONICAL_EXCERPT_BOUND',message:`Canonical excerpt must contain 1-${MAX_EXCERPT} characters: ${c.kb_path}`,_has_sources:false,_packet_ready:false}}];const linked=c.kb_path.startsWith('sources/')?null:source(c.content,q);canonical.push({kb_path:c.kb_path,source_path:c.source_path,role:c.kb_path.startsWith('sources/')?'canonical_source':'canonical_page',excerpt:linked?`${excerpt}\\n\\n## Selected linked source\\n\\n${linked.line}`:excerpt,linked_sources:linked?[linked.kb_path]:[]});if(linked&&!requests.has(linked.kb_path))requests.set(linked.kb_path,{...linked,source_path:`${SOURCE_ROOT}/${linked.kb_path}`,absolute_path:`${KB_ROOT}/${linked.kb_path}`,max_bytes:MAX_BYTES});}const selection=$('Select deterministic index candidates').first().json;return [{json:{status:'ready',question,selection_method:selection._needs_fallback?'keyword_literal':'deterministic_index_score',literal_query:selection._needs_fallback?selection.query:null,canonical_evidence:canonical,source_requests:[...requests.values()],_has_sources:requests.size>0,_packet_ready:false}}];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -2272,
-        704
-      ],
-      "id": "1e5690b4-2a15-406a-9b90-2db44dedf32e",
-      "name": "Prepare canonical evidence and source requests"
     },
     {
       "parameters": {
@@ -429,10 +416,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -2048,
-        704
+        1632,
+        496
       ],
-      "id": "1e187691-eb6f-4ac8-be51-ee6fd082dda8",
+      "id": "078eb919-e3ca-4513-adbf-a6e398fdb8a7",
       "name": "Linked sources required?"
     },
     {
@@ -442,10 +429,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1824,
-        560
+        1808,
+        448
       ],
-      "id": "7a5ac21e-ae8f-4ac4-bfe1-08ded65dc130",
+      "id": "78fc0ef0-52fa-4957-8aae-10d42bde5d93",
       "name": "Emit linked source requests"
     },
     {
@@ -456,24 +443,24 @@
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1.1,
       "position": [
-        -1600,
-        560
+        1968,
+        448
       ],
-      "id": "8d3ba45c-d4a3-4206-8bbf-cb787a165b0d",
+      "id": "0e62b95c-7575-452e-a691-3931902bd76a",
       "name": "Read linked source pages",
       "onError": "continueRegularOutput"
     },
     {
       "parameters": {
-        "jsCode": "const KB_ROOT='/home/node/.n8n-files/Uranus/knowledge/cole-medin-knowledge-base';const SOURCE_ROOT='knowledge/cole-medin-knowledge-base';const MAX_BYTES=131072;const prepared=$('Prepare canonical evidence and source requests').first().json,items=$input.all(),expected=new Map(prepared.source_requests.map((r)=>[r.absolute_path,r]));function fail(c,m){return [{json:{status:'error',error_code:c,message:m,_sources_ready:false}}];}if(items.length!==expected.size||items.some((i)=>typeof i.json.error==='string'))return fail('SOURCE_READ_FAILED','Every selected linked source must be read successfully.');const seen=new Set(),out=[];for(const item of items){const b=item.binary?.data,bytes=Number(b?.bytes),dir=typeof b?.directory==='string'?b.directory.split(String.fromCharCode(92)).join('/'):'';const name=typeof b?.fileName==='string'?b.fileName:'';if(!b||!Number.isSafeInteger(bytes)||bytes<0||!dir||!name)return fail('SOURCE_READ_FAILED','A linked source returned untrustworthy metadata.');const abs=`${dir.replace(/[/]+$/,'')}/${name}`,request=expected.get(abs);if(!request||!abs.startsWith(`${KB_ROOT}/`)||seen.has(abs))return fail('SOURCE_SCOPE_VIOLATION','A linked source did not match the frozen request set.');if(bytes>MAX_BYTES)return fail('SOURCE_PAGE_TOO_LARGE',`A source page exceeds the ${MAX_BYTES}-byte limit.`);seen.add(abs);out.push({json:{status:'ready',kb_path:request.kb_path,source_path:`${SOURCE_ROOT}/${request.kb_path}`,source_line:request.line,content_bytes:bytes,_sources_ready:true},binary:item.binary});}out.sort((a,b)=>a.json.kb_path.localeCompare(b.json.kb_path));return out;"
+        "jsCode": "const KB_ROOT='/home/node/.n8n-files/Uranus/knowledge/cole-medin-knowledge-base';const SOURCE_ROOT='knowledge/cole-medin-knowledge-base';const MAX_BYTES=131072;const prepared=$('Prepare evidence and source requests').first().json,items=$input.all(),expected=new Map(prepared.source_requests.map((r)=>[r.absolute_path,r]));function fail(c,m){return [{json:{status:'error',error_code:c,message:m,_sources_ready:false}}];}if(items.length!==expected.size||items.some((i)=>typeof i.json.error==='string'))return fail('SOURCE_READ_FAILED','Every selected linked source must be read successfully.');const seen=new Set(),out=[];for(const item of items){const b=item.binary?.data,bytes=Number(b?.bytes),dir=typeof b?.directory==='string'?b.directory.split(String.fromCharCode(92)).join('/'):'';const name=typeof b?.fileName==='string'?b.fileName:'';if(!b||!Number.isSafeInteger(bytes)||bytes<0||!dir||!name)return fail('SOURCE_READ_FAILED','A linked source returned untrustworthy metadata.');const abs=`${dir.replace(/[/]+$/,'')}/${name}`,request=expected.get(abs);if(!request||!abs.startsWith(`${KB_ROOT}/`)||seen.has(abs))return fail('SOURCE_SCOPE_VIOLATION','A linked source did not match the frozen request set.');if(bytes>MAX_BYTES)return fail('SOURCE_PAGE_TOO_LARGE',`A source page exceeds the ${MAX_BYTES}-byte limit.`);seen.add(abs);out.push({json:{status:'ready',kb_path:request.kb_path,source_path:`${SOURCE_ROOT}/${request.kb_path}`,source_line:request.line,content_bytes:bytes,_sources_ready:true},binary:item.binary});}out.sort((a,b)=>a.json.kb_path.localeCompare(b.json.kb_path));return out;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1376,
-        560
+        2144,
+        448
       ],
-      "id": "bed8138b-7ae4-4312-923a-a23b4247f16e",
+      "id": "934beb18-eeb4-466c-9171-da68b6a92f6d",
       "name": "Validate linked source reads"
     },
     {
@@ -504,10 +491,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -1152,
-        560
+        2304,
+        448
       ],
-      "id": "d2db55fc-3a93-42a8-a9ca-2ea3c713e179",
+      "id": "3daaa765-1807-4843-abd6-130bf8fe6cb0",
       "name": "Linked sources approved?"
     },
     {
@@ -523,24 +510,24 @@
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1.1,
       "position": [
-        -928,
+        2480,
         464
       ],
-      "id": "c3bc2d96-83b8-4f3d-a789-49f993e15b2a",
+      "id": "0213076f-7477-443a-b7a1-4903bf32d5b6",
       "name": "Decode linked sources as UTF-8",
       "onError": "continueRegularOutput"
     },
     {
       "parameters": {
-        "jsCode": "const MAX_EVIDENCE=4,MAX_EXCERPT=5000,MAX_PACKET=20000;const prepared=$('Prepare canonical evidence and source requests').first().json;function fail(c,m){return [{json:{status:'error',error_code:c,message:m,_packet_ready:false}}];}function body(c){if(!c.startsWith('---'))return c.trim();const m=c.match(/^---\\r?\\n[\\s\\S]*?\\r?\\n---\\r?\\n/);return m?c.slice(m[0].length).trim():'';}function opening(c){const b=body(c),at=b.search(/\\r?\\n##\\s/);return (at===-1?b:b.slice(0,at)).trim();}const sourceEvidence=[];if(prepared.source_requests.length){const items=$input.all();if(items.length!==prepared.source_requests.length)return fail('SOURCE_ROUTE_MISMATCH','Decoded sources do not match the request set.');for(const item of items){const c=item.json;if(typeof c.error==='string'||typeof c.content!=='string'||c.content.includes('�'))return fail('SOURCE_DECODE_FAILED','A linked source could not be decoded as UTF-8.');const excerpt=opening(c.content);if(!excerpt||excerpt.length>MAX_EXCERPT)return fail('SOURCE_EXCERPT_BOUND',`Source excerpt must contain 1-${MAX_EXCERPT} characters: ${c.kb_path}`);sourceEvidence.push({kb_path:c.kb_path,source_path:c.source_path,role:'linked_source',excerpt,linked_sources:[]});}}const evidence=[...prepared.canonical_evidence,...sourceEvidence];if(!evidence.length||evidence.length>MAX_EVIDENCE)return fail('EVIDENCE_BOUND',`Evidence must contain 1-${MAX_EVIDENCE} unique pages.`);const paths=evidence.map((e)=>e.kb_path);if(new Set(paths).size!==paths.length)return fail('DUPLICATE_EVIDENCE','Evidence paths must be unique.');const packet={schema:'uranus-evidence-packet-2',question:prepared.question,selection_method:prepared.selection_method,literal_query:prepared.literal_query,route:paths,evidence,limits:{max_canonical_pages:2,max_evidence_pages:MAX_EVIDENCE,max_excerpt_chars_per_page:MAX_EXCERPT,max_packet_chars:MAX_PACKET}};const packetJson=JSON.stringify(packet,null,2);if(packetJson.length>MAX_PACKET)return fail('PACKET_BOUND_EXCEEDED',`The packet exceeds ${MAX_PACKET} characters.`);const modelPrompt=`You are Miranda. Answer the question using only the validated evidence packet below.\\n\\nRequirements:\\n- Answer every explicit clause directly and concisely.\\n- Use only packet evidence; do not add model knowledge.\\n- Cite only kb_path values present in packet.evidence.\\n- Preserve linked source provenance.\\n- End with a Sources section containing exact cited kb_path values as Markdown bullets.\\n- If the packet is insufficient, say so instead of guessing.\\n\\nQuestion:\\n${prepared.question}\\n\\nValidated evidence packet:\\n${packetJson}`;return [{json:{status:'success',question:prepared.question,selection_method:prepared.selection_method,literal_query:prepared.literal_query,evidence_packet:packet,evidence_packet_json:packetJson,packet_characters:packetJson.length,evidence_paths:paths,model_prompt:modelPrompt,_packet_ready:true}}];"
+        "jsCode": "const MAX_EVIDENCE=4,MAX_EXCERPT=5000,MAX_PACKET=20000;const prepared=$('Prepare evidence and source requests').first().json;function fail(c,m){return [{json:{status:'error',error_code:c,message:m,_packet_ready:false}}];}function body(c){if(!c.startsWith('---'))return c.trim();const m=c.match(/^---\\r?\\n[\\s\\S]*?\\r?\\n---\\r?\\n/);return m?c.slice(m[0].length).trim():'';}function opening(c){const b=body(c),at=b.search(/\\r?\\n##\\s/);return (at===-1?b:b.slice(0,at)).trim();}const sourceEvidence=[];if(prepared.source_requests.length){const items=$input.all();if(items.length!==prepared.source_requests.length)return fail('SOURCE_ROUTE_MISMATCH','Decoded sources do not match the request set.');for(const item of items){const c=item.json;if(typeof c.error==='string'||typeof c.content!=='string'||c.content.includes('�'))return fail('SOURCE_DECODE_FAILED','A linked source could not be decoded as UTF-8.');const excerpt=opening(c.content);if(!excerpt||excerpt.length>MAX_EXCERPT)return fail('SOURCE_EXCERPT_BOUND',`Source excerpt must contain 1-${MAX_EXCERPT} characters: ${c.kb_path}`);sourceEvidence.push({kb_path:c.kb_path,source_path:c.source_path,role:'linked_source',excerpt,linked_sources:[]});}}const evidence=[...prepared.canonical_evidence,...sourceEvidence];if(!evidence.length||evidence.length>MAX_EVIDENCE)return fail('EVIDENCE_BOUND',`Evidence must contain 1-${MAX_EVIDENCE} unique pages.`);const paths=evidence.map((e)=>e.kb_path);if(new Set(paths).size!==paths.length)return fail('DUPLICATE_EVIDENCE','Evidence paths must be unique.');const packet={schema:'uranus-evidence-packet-2',question:prepared.question,selection_method:prepared.selection_method,literal_query:prepared.literal_query,route:paths,evidence,limits:{max_canonical_pages:2,max_evidence_pages:MAX_EVIDENCE,max_excerpt_chars_per_page:MAX_EXCERPT,max_packet_chars:MAX_PACKET}};const packetJson=JSON.stringify(packet,null,2);if(packetJson.length>MAX_PACKET)return fail('PACKET_BOUND_EXCEEDED',`The packet exceeds ${MAX_PACKET} characters.`);const modelPrompt=`You are Miranda. Answer the question using only the validated evidence packet below.\\n\\nRequirements:\\n- Answer every explicit clause directly and concisely.\\n- Use only packet evidence; do not add model knowledge.\\n- Cite only kb_path values present in packet.evidence.\\n- Preserve linked source provenance.\\n- End with a Sources section containing exact cited kb_path values as Markdown bullets.\\n- If the packet is insufficient, say so instead of guessing.\\n\\nQuestion:\\n${prepared.question}\\n\\nValidated evidence packet:\\n${packetJson}`;return [{json:{status:'success',question:prepared.question,selection_method:prepared.selection_method,literal_query:prepared.literal_query,evidence_packet:packet,evidence_packet_json:packetJson,packet_characters:packetJson.length,evidence_paths:paths,model_prompt:modelPrompt,_packet_ready:true}}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -704,
-        704
+        2656,
+        448
       ],
-      "id": "19a59c51-1bd6-4be4-8a52-4632d18423c2",
+      "id": "ddf9049d-431a-4a94-ad72-385ed90b0ac2",
       "name": "Assemble generalized evidence packet"
     },
     {
@@ -571,10 +558,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -480,
-        704
+        176,
+        784
       ],
-      "id": "8d73a8b6-be84-4746-8125-946a4f485025",
+      "id": "b001acbb-363f-4788-86ed-6e747088e611",
       "name": "Generalized packet approved?"
     },
     {
@@ -584,10 +571,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -592,
-        704
+        32,
+        768
       ],
-      "id": "8670a602-90ec-49e0-8416-3f3778d48d50",
+      "id": "eac09b0c-f76d-4f2d-858c-88fd4f590dd6",
       "name": "Validate final packet bounds"
     },
     {
@@ -616,10 +603,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -256,
-        608
+        400,
+        736
       ],
-      "id": "f86af1b9-982e-4f51-a2ef-7b9dc046b16b",
+      "id": "e7c20828-d7ac-4ed7-aae0-794c3309681b",
       "name": "Run Antigravity answer",
       "credentials": {
         "httpHeaderAuth": {
@@ -636,24 +623,11 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -32,
-        608
+        624,
+        736
       ],
-      "id": "a6de2c71-43c4-461d-ab69-884406d118cc",
+      "id": "6f7ed5cf-1f13-4925-837b-65a32c2ef5b3",
       "name": "Validate Antigravity answer"
-    },
-    {
-      "parameters": {
-        "jsCode": "const packet=$('Assemble generalized evidence packet').first().json,result=$input.first().json??{},context=$('Validate resolved conversational question').first().json??{};if(result.status!=='success'||typeof result.text!=='string'||!result.text.trim()){const message=result.message??'Antigravity returned no text answer.';return [{json:{status:'error',error_code:result.error_code??'MODEL_OUTPUT_MISSING',message,output:message,model_called:true,store_in_memory:false,interaction_status:result.interaction_status??null}}];}return [{json:{status:'success',output:result.text,question:packet.question,resolved_question:packet.question,original_chat_input:context.original_chat_input,session_id:context.session_id,selection_method:packet.selection_method,literal_query:packet.literal_query,model:result.model??'antigravity-preview-05-2026',expected_model_actions_on_success:1,packet_characters:packet.packet_characters,evidence_paths:packet.evidence_paths,answer:result.text,interaction_id:result.interaction_id??null,interaction_status:result.interaction_status??null,usage:result.usage??null,store_in_memory:true,measurement_note:'Confirm one Antigravity interaction, provider token usage, duration, grounding, completeness, and Sources from this execution.'}}];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        192,
-        608
-      ],
-      "id": "b3bbbeb4-888b-461c-a44f-23c9a2f353d2",
-      "name": "Return generalized answer and measurements"
     },
     {
       "parameters": {
@@ -662,42 +636,27 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -224,
+        1168,
         944
       ],
-      "id": "7580df7c-45c2-4dcc-ab60-6bf4bb767da2",
+      "id": "60c8f925-d210-4df8-aa0c-78277afd0bf3",
       "name": "Return structured generalized error"
     },
     {
       "parameters": {
-        "jsCode": "const current=$input.first().json,context=$('Validate resolved conversational question').first().json??{};const answer='The Cole knowledge base does not provide enough evidence to answer this question.';return [{json:{status:'no_match',terminal:true,question:current.question,resolved_question:current.question,original_chat_input:context.original_chat_input,session_id:context.session_id,selection_method:'keyword_literal',literal_query:current.query,candidates:[],model_called:false,expected_model_actions:0,answer,output:answer,store_in_memory:true,sources:[]}}];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        400,
-        96
-      ],
-      "id": "b94440b7-50b5-4534-9cb6-58addb2d4858",
-      "name": "Return terminal no_match without Antigravity"
-    },
-    {
-      "parameters": {
-        "public": false,
-        "mode": "hostedChat",
         "options": {
-          "loadPreviousSession": "memory",
           "responseMode": "lastNode"
         }
       },
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.4,
       "position": [
-        -3184,
-        -128
+        0,
+        240
       ],
-      "id": "1dc54307-2f80-496d-a279-085dbfc7cb89",
-      "name": "When chat message received"
+      "id": "ccb9d0f7-ec59-4723-9730-a241719e56e7",
+      "name": "When chat message received",
+      "webhookId": "4b3e9ceb-f9b8-4a75-a06e-4ecb70aa5b5e"
     },
     {
       "parameters": {
@@ -706,16 +665,14 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2944,
-        -128
+        144,
+        272
       ],
-      "id": "50d89bc3-605f-4224-b66b-804d5efd4e0e",
+      "id": "a1c09dcc-0d9f-45d4-8200-1f5765b581b3",
       "name": "Validate chat envelope"
     },
     {
       "parameters": {
-        "mode": "load",
-        "simplifyOutput": true,
         "options": {
           "groupMessages": true
         }
@@ -723,10 +680,10 @@
       "type": "@n8n/n8n-nodes-langchain.memoryManager",
       "typeVersion": 1.1,
       "position": [
-        -2704,
-        -128
+        288,
+        240
       ],
-      "id": "5b7adf65-c68e-4676-9f2c-8912820f42b5",
+      "id": "24ed3bb6-8288-438d-bf99-0c6ba4226bfc",
       "name": "Load prior session messages",
       "alwaysOutputData": true
     },
@@ -737,25 +694,23 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2464,
-        -128
+        528,
+        240
       ],
-      "id": "30598eea-79ad-4429-8fba-28b071617363",
+      "id": "891d9258-32c2-43ce-a8ee-9a0c89655d40",
       "name": "Build contextualizer request"
     },
     {
       "parameters": {
-        "sessionIdType": "fromInput",
-        "sessionKey": "={{ $json.sessionId }}",
         "contextWindowLength": 8
       },
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.4,
       "position": [
-        -16,
-        400
+        736,
+        608
       ],
-      "id": "8b2d27c4-ca1b-4c99-ac0e-6757087ea5b7",
+      "id": "b9fc0b63-7a0b-4ff1-9c00-00a7b3b808b4",
       "name": "Conversation Simple Memory"
     },
     {
@@ -784,10 +739,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -2224,
-        -128
+        704,
+        240
       ],
-      "id": "5e21f25b-5c9f-4fbf-ad24-624ca534fed4",
+      "id": "66d48d37-87c7-4cf8-94b6-070e53e24301",
       "name": "Resolve conversational question",
       "credentials": {
         "httpHeaderAuth": {
@@ -804,10 +759,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2016,
-        -128
+        880,
+        240
       ],
-      "id": "a9bc7634-ea04-42c4-9e8b-c0be223d53a6",
+      "id": "3fe62c14-5846-47ae-b32e-f7391a0da852",
       "name": "Validate resolved conversational question"
     },
     {
@@ -818,10 +773,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        -1824,
-        -128
+        1024,
+        240
       ],
-      "id": "847df351-34f5-4e24-982c-fd0734169750",
+      "id": "2cf4951f-d0a9-4575-b7b2-55f90369ca15",
       "name": "Resolution status?"
     },
     {
@@ -831,10 +786,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1600,
-        -128
+        1584,
+        672
       ],
-      "id": "93fa7b6f-b23d-4994-9c76-7b895a2bcc7e",
+      "id": "066a7a5a-8a24-4a9f-b793-7670f104a8cb",
       "name": "Return clarification"
     },
     {
@@ -844,10 +799,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1600,
-        -32
+        1456,
+        752
       ],
-      "id": "65fda08c-7736-4315-968c-c3174f8cddd8",
+      "id": "9379868e-6c36-4bbf-9744-1c82125c7fe9",
       "name": "Return help"
     },
     {
@@ -857,10 +812,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1600,
-        64
+        1344,
+        816
       ],
-      "id": "71f36681-e8cf-44c6-98de-943797e76bf0",
+      "id": "b0fac7e6-1762-446a-a90e-25caaf3a82e9",
       "name": "Return resolver error"
     },
     {
@@ -870,10 +825,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        624,
-        560
+        1888,
+        656
       ],
-      "id": "7f51e786-6dbb-451e-8105-870d1bcd80dd",
+      "id": "21694b3b-425b-4a14-9038-09a86dbf9544",
       "name": "Normalize chat response"
     },
     {
@@ -904,27 +859,24 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        848,
-        560
+        2112,
+        656
       ],
-      "id": "f5c70513-ab7f-4652-b847-13f34ad61e94",
+      "id": "81305876-df54-48ca-af2d-33d449a3d775",
       "name": "Store visible turn?"
     },
     {
       "parameters": {
         "mode": "insert",
-        "insertMode": "insert",
         "messages": {
           "messageValues": [
             {
               "type": "user",
-              "message": "={{ $json.original_chat_input }}",
-              "hideFromUI": false
+              "message": "={{ $json.original_chat_input }}"
             },
             {
               "type": "ai",
-              "message": "={{ $json.output }}",
-              "hideFromUI": false
+              "message": "={{ $json.output }}"
             }
           ]
         }
@@ -932,10 +884,10 @@
       "type": "@n8n/n8n-nodes-langchain.memoryManager",
       "typeVersion": 1.1,
       "position": [
-        1008,
-        432
+        2336,
+        688
       ],
-      "id": "16eb7c9b-4c3c-47f0-99e9-102551f5d95f",
+      "id": "64dc6f37-01a9-48a3-aaa4-ba937c520877",
       "name": "Insert visible turn"
     },
     {
@@ -945,11 +897,65 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1296,
-        560
+        2688,
+        656
       ],
-      "id": "041c5c0d-d518-4cba-96ff-d6f217a315e4",
+      "id": "a6f39be4-5ce4-4d42-8122-7a16fec6accd",
       "name": "Return chat response"
+    },
+    {
+      "parameters": {
+        "content": "# uranus-n8n-agent\n# A conversational assistant for a curated Markdown knowledge base.\n# How it works: conversation context → standalone question → fresh evidence → answer with source references.\n# History helps interpret follow-up questions. The answer model receives retrieved excerpts as evidence, with their source paths.\n# I designed and tested the workflows, using coding agents for implementation. Personal proof of concept.",
+        "height": 272,
+        "width": 1248
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1616,
+        832
+      ],
+      "id": "43468300-0991-49b8-81de-5c29a654bae1",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "jsCode": "const current=$input.first().json,context=$('Validate resolved conversational question').first().json??{};const answer='The Cole knowledge base does not provide enough evidence to answer this question.';return [{json:{status:'no_match',terminal:true,question:current.question,resolved_question:current.question,original_chat_input:context.original_chat_input,session_id:context.session_id,selection_method:'keyword_literal',literal_query:current.query,candidates:[],model_called:false,expected_model_actions:0,answer,output:answer,store_in_memory:true,sources:[]}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1008,
+        672
+      ],
+      "id": "5d066a1f-2f30-4783-bc90-db114aee0e81",
+      "name": "Return terminal no_match"
+    },
+    {
+      "parameters": {
+        "jsCode": "const packet=$('Assemble generalized evidence packet').first().json,result=$input.first().json??{},context=$('Validate resolved conversational question').first().json??{};if(result.status!=='success'||typeof result.text!=='string'||!result.text.trim()){const message=result.message??'Antigravity returned no text answer.';return [{json:{status:'error',error_code:result.error_code??'MODEL_OUTPUT_MISSING',message,output:message,model_called:true,store_in_memory:false,interaction_status:result.interaction_status??null}}];}return [{json:{status:'success',output:result.text,question:packet.question,resolved_question:packet.question,original_chat_input:context.original_chat_input,session_id:context.session_id,selection_method:packet.selection_method,literal_query:packet.literal_query,model:result.model??'antigravity-preview-05-2026',expected_model_actions_on_success:1,packet_characters:packet.packet_characters,evidence_paths:packet.evidence_paths,answer:result.text,interaction_id:result.interaction_id??null,interaction_status:result.interaction_status??null,usage:result.usage??null,store_in_memory:true,measurement_note:'Confirm one Antigravity interaction, provider token usage, duration, grounding, completeness, and Sources from this execution.'}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        848,
+        736
+      ],
+      "id": "2d6d471f-3c3f-437c-835f-a940c61b1692",
+      "name": "Return generalized answer"
+    },
+    {
+      "parameters": {
+        "jsCode": "const KB_ROOT='/home/node/.n8n-files/Uranus/knowledge/cole-medin-knowledge-base';const SOURCE_ROOT='knowledge/cole-medin-knowledge-base';const MAX_BYTES=131072,MAX_EXCERPT=5000;const STOP=new Set(['a','an','and','are','as','at','be','by','cole','does','for','from','how','i','in','into','is','it','mean','means','of','on','or','recommend','says','that','the','their','to','what','when','why','with']);function norm(t){let v=t.toLowerCase();if(v.length>5&&v.endsWith('ies'))v=`${v.slice(0,-3)}y`;else if(v.length>4&&v.endsWith('ses'))v=v.slice(0,-1);else if(v.length>4&&v.endsWith('s')&&!v.endsWith('ss'))v=v.slice(0,-1);return v;}function toks(v){return [...new Set((v.toLowerCase().match(/[\\p{L}\\p{N}]+/gu)??[]).map(norm).filter((t)=>t.length>=2&&!STOP.has(t)))];}function body(c){if(!c.startsWith('---'))return c.trim();const m=c.match(/^---\\r?\\n[\\s\\S]*?\\r?\\n---\\r?\\n/);return m?c.slice(m[0].length).trim():'';}function opening(c){const b=body(c),at=b.search(/\\r?\\n##\\s/);return (at===-1?b:b.slice(0,at)).trim();}function source(c,q){const b=body(c),at=b.search(/\\r?\\n## Sources\\s*\\r?\\n/);if(at===-1)return null;const out=[];for(const [order,line] of b.slice(at).split(/\\r?\\n/).entries()){const m=line.match(/^\\s*-\\s+\\[[^\\]]+]\\(\\.\\.\\/sources\\/([A-Za-z0-9][A-Za-z0-9_-]*\\.md)\\)/);if(!m)continue;const lt=new Set(toks(line));out.push({kb_path:`sources/${m[1]}`,line:line.trim(),overlap:q.filter((t)=>lt.has(t)).length,order});}out.sort((a,b)=>b.overlap-a.overlap||a.order-b.order||a.kb_path.localeCompare(b.kb_path));return out[0]??null;}const question=$('Validate question and emit fixed indexes').first().json.question.trim(),q=toks(question),items=$input.all(),canonical=[],requests=new Map();for(const item of items){const c=item.json;if(typeof c.error==='string'||typeof c.content!=='string'||c.content.includes('�'))return [{json:{status:'error',error_code:'CANONICAL_DECODE_FAILED',message:'A selected canonical page could not be decoded as UTF-8.',_has_sources:false,_packet_ready:false}}];const excerpt=opening(c.content);if(!excerpt||excerpt.length>MAX_EXCERPT)return [{json:{status:'error',error_code:'CANONICAL_EXCERPT_BOUND',message:`Canonical excerpt must contain 1-${MAX_EXCERPT} characters: ${c.kb_path}`,_has_sources:false,_packet_ready:false}}];const linked=c.kb_path.startsWith('sources/')?null:source(c.content,q);canonical.push({kb_path:c.kb_path,source_path:c.source_path,role:c.kb_path.startsWith('sources/')?'canonical_source':'canonical_page',excerpt:linked?`${excerpt}\\n\\n## Selected linked source\\n\\n${linked.line}`:excerpt,linked_sources:linked?[linked.kb_path]:[]});if(linked&&!requests.has(linked.kb_path))requests.set(linked.kb_path,{...linked,source_path:`${SOURCE_ROOT}/${linked.kb_path}`,absolute_path:`${KB_ROOT}/${linked.kb_path}`,max_bytes:MAX_BYTES});}const selection=$('Select deterministic index candidates').first().json;return [{json:{status:'ready',question,selection_method:selection._needs_fallback?'keyword_literal':'deterministic_index_score',literal_query:selection._needs_fallback?selection.query:null,canonical_evidence:canonical,source_requests:[...requests.values()],_has_sources:requests.size>0,_packet_ready:false}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1472,
+        448
+      ],
+      "id": "07de7a28-d400-4391-a4b0-72cd1439ee9c",
+      "name": "Prepare evidence and source requests"
     }
   ],
   "pinData": {},
@@ -1136,7 +1142,7 @@
         ],
         [
           {
-            "node": "Return terminal no_match without Antigravity",
+            "node": "Return terminal no_match",
             "type": "main",
             "index": 0
           }
@@ -1187,18 +1193,7 @@
       "main": [
         [
           {
-            "node": "Prepare canonical evidence and source requests",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Prepare canonical evidence and source requests": {
-      "main": [
-        [
-          {
-            "node": "Linked sources required?",
+            "node": "Prepare evidence and source requests",
             "type": "main",
             "index": 0
           }
@@ -1340,7 +1335,7 @@
       "main": [
         [
           {
-            "node": "Return generalized answer and measurements",
+            "node": "Return generalized answer",
             "type": "main",
             "index": 0
           }
@@ -1394,11 +1389,6 @@
     "Conversation Simple Memory": {
       "ai_memory": [
         [
-          {
-            "node": "When chat message received",
-            "type": "ai_memory",
-            "index": 0
-          },
           {
             "node": "Load prior session messages",
             "type": "ai_memory",
@@ -1499,28 +1489,6 @@
         ]
       ]
     },
-    "Return generalized answer and measurements": {
-      "main": [
-        [
-          {
-            "node": "Normalize chat response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Return terminal no_match without Antigravity": {
-      "main": [
-        [
-          {
-            "node": "Normalize chat response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Return structured generalized error": {
       "main": [
         [
@@ -1571,6 +1539,39 @@
           }
         ]
       ]
+    },
+    "Return terminal no_match": {
+      "main": [
+        [
+          {
+            "node": "Normalize chat response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Return generalized answer": {
+      "main": [
+        [
+          {
+            "node": "Normalize chat response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare evidence and source requests": {
+      "main": [
+        [
+          {
+            "node": "Linked sources required?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -1579,11 +1580,11 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "9700d72a-87ce-4594-9a1c-8acc53130726",
+  "versionId": "272e990c-cf44-4edc-89ce-2583709fb6f8",
   "meta": {
     "instanceId": "1f8a4394cb5a343a949d2babea27e968d6b9a9fa00528b9d7dc40dc7f0483b60"
   },
   "nodeGroups": [],
-  "id": "boiUxT5OwJJxC6JP",
+  "id": "zFqk0ESDj1QoBWEA",
   "tags": []
 }
