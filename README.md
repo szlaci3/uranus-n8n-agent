@@ -1,164 +1,125 @@
-# Uranus: a grounded n8n knowledge agent
+# Uranus: a conversational n8n knowledge assistant
 
-Uranus provides grounded answers over a linked knowledge base with inspectable provenance and explicit refusal when evidence is unavailable.
+Uranus is a personal proof of concept for answering questions over a curated, linked Markdown knowledge base. The current workflow combines conversational context, deterministic retrieval, and evidence-only answer generation in n8n.
 
-It is a tested n8n proof of concept for **agentic retrieval and grounded generation over a linked knowledge base**. A Gemini 3.5 Flash agent navigates canonical Markdown pages through two bounded, read-only workflow tools. Retrieval is judged from the execution trace; plausible final prose alone is not accepted as evidence that the right sources were retrieved.
+The main artifact is [`miranda-chat-antigravity.json`](workflows/miranda-chat-antigravity.json). It resolves follow-up questions using bounded session history, retrieves fresh canonical pages and linked sources, and sends that evidence to the answer model. It uses no embeddings or vector store.
 
-> **Workflow image pending real n8n captures.** The final composite will show the accepted Gemini canvas, the supporting KB-navigation workflow, and the successful “dumb zone” fallback trace. See [the capture guide](assets/CAPTURE-GUIDE.md). No synthetic screenshot is used.
+## Demonstration
 
-## What the system does
+![Executed n8n conversational workflow, retrieved evidence, and the complete chunking question and answer](assets/workflow.png)
 
-1. A user asks Miranda a question through n8n Chat Trigger.
-2. Miranda begins at the knowledge base index and selects canonical pages from their displayed descriptions.
-3. `read_kb_page` returns one validated Markdown page with its canonical `kb_path`, repository-relative `source_path`, and content.
-4. If the indexes expose no plausible entry, Miranda may call `find_kb_pages` once with a literal phrase from the question, then read a selected candidate before using it as evidence.
-5. Miranda answers from pages successfully read during that turn and lists their exact paths, or states that the KB does not provide enough evidence.
+The accepted capture shows the question **“Why does chunking matter in RAG?”**, the executed workflow, the answer node's input evidence, and the complete response with its Sources list. Open the image at full size to inspect the paths and excerpt.
 
-## Architecture
+The four reported retrieved pages include both paths cited in the answer. The two cited excerpts were also reviewed separately. This supports citation membership for this example; it does not establish that every generated claim is fully qualified. In particular, the answer's roughly 100x cost comparison comes from the KB's discussion of unstructured knowledge and omits that context. It is **not a measured performance result for Uranus**. See [Demonstration evidence](docs/demonstration.md).
+
+This capture is from the conversational workflow, not the earlier agentic retry described below.
+
+## How the current workflow works
 
 ```text
-n8n Chat Trigger
-       |
-       v
-Miranda — n8n AI Agent
-       |-- Gemini 3.5 Flash
-       |-- read_kb_page  -- exact, allowlisted Markdown retrieval
-       `-- find_kb_pages -- one-shot, literal keyword fallback
-                              |
-                              `-- candidate must be read before use
+Chat Trigger: current message + sessionId
+  -> load bounded session history
+  -> resolve the message into a standalone question (Antigravity HTTP request)
+  -> validate resolver JSON and route clarification, help, or retrieval
+  -> score canonical indexes; use scoped literal fallback when needed
+  -> read selected canonical pages and linked sources
+  -> assemble and validate a bounded evidence packet
+  -> generate an evidence-only answer (Antigravity HTTP request)
+  -> store the visible user/assistant exchange
 ```
 
-The accepted system contains two n8n workflows:
+**History resolves the question; fresh retrieval supplies the evidence.** The final answer request receives the resolved question and evidence packet, not the conversation transcript. Earlier assistant claims therefore do not become sources merely by appearing in memory.
 
-- [`miranda-chat-gemini.json`](workflows/miranda-chat-gemini.json) contains Chat Trigger, Miranda, Gemini 3.5 Flash, and the two agent-facing tools.
-- [`kb-navigation.json`](workflows/kb-navigation.json) implements exact-page reads, scoped literal search, input and path validation, size and UTF-8 checks, structured results, and closed error branches.
+The two model steps use n8n HTTP Request nodes with the Interactions API contract configured in the export. Retrieval and branching are handled by workflow nodes rather than model-directed tool calls. A supported knowledge turn uses two model requests: one to resolve the question and one to answer. Clarification, help, and terminal `no_match` use only the resolver request; invalid chat envelopes use neither.
 
-Technically, this is **non-vector RAG**: external knowledge is retrieved before generation, but no embedding model or vector store participates. The source KB already supplies curated indexes, canonical pages, and typed Markdown links. For this proof of concept, using that native structure preserved page-level provenance and avoided adding an ingestion, ranking, and synchronization system without an observed retrieval need.
+### Memory and grounding controls
 
-## Reliability and grounding design
+- Simple Memory is keyed by the incoming `sessionId`, with an eight-exchange window.
+- Resolver history is capped at 16 prior visible messages and 12,000 serialized characters; the oldest complete pairs are removed first.
+- The current message is passed separately. Completed success, clarification, help, and no-match turns store one visible user/assistant pair; transient technical errors are not stored.
+- Retrieval uses a fixed read-only KB root, validated Markdown paths, bounded reads and excerpts, and explicit error branches.
+- Canonical indexes and literal fallback select candidates; selected pages and linked sources are read to build the answer evidence packet.
+- Unsupported retrieval returns an explicit insufficient-evidence response without calling the answer model.
+- The answer prompt requires canonical path citations. The output validator checks completed, nonempty model text; it does **not** deterministically verify every citation or claim.
 
-### Deterministic workflow/tool controls
+The KB already provides indexes and typed Markdown links. Using that structure made retrieval and page-level provenance inspectable without adding embedding ingestion or a vector database. Lexical selection still has limitations for synonyms and questions outside the evaluated cases.
 
-- A fixed read-only KB root and conservative path allowlist.
-- Rejection of absolute paths, traversal, non-Markdown files, raw transcripts, maintenance paths, missing pages, oversized pages, and invalid UTF-8.
-- A 128 KiB per-page limit measured above the valid KB baseline.
-- Literal search restricted to `concepts/`, `entities/`, and `sources/`, with a 120-character query limit and at most five candidates.
-- Structured success and error results containing canonical provenance rather than arbitrary filesystem access.
-- A zero-result fallback response with `status: no_match` and `terminal: true`.
-- Inactive, unpinned public workflow exports with no credentials or provider secrets.
+## Evaluation and current artifact status
 
-### Tested model-followed behavior
+The [chat handover](docs/antigravity-chat-handover.md) records operator-run tests after memory hardening on 2026-08-31:
 
-- Begin knowledge questions at `index.md` and follow only relevant canonical links.
-- Maintain a within-turn ledger of successful `read_kb_page` results.
-- Treat links, keyword candidates, and snippets as locators rather than evidence.
-- Read linked `sources/*.md` evidence for supported substantive answers when available.
-- Cover every explicit clause of a multi-part question.
-- Audit final citations against successfully read paths.
-- Decline unsupported questions rather than filling gaps from model knowledge.
+| Scenario | Recorded result |
+|---|---|
+| Three-turn conversation: chunking, its costs, and whether the concepts must be used together | Passed |
+| Pronoun-only question in a separate session | Asked for clarification without inheriting another session's context |
+| Direct chunking retrieval | Passed |
+| Literal fallback for “dumb zone” | Passed |
+| Unsupported Kubernetes material | Terminal `no_match` |
 
-These latter controls are prompt instructions whose behavior was manually tested; they are not a deterministic final-answer verifier. n8n bounds the agent at eight iterations, while the prompt separately instructs it to use no more than eight KB tool calls.
+These are a small, manually reviewed set, not an automated answer-quality benchmark. The later accepted demonstration provides a separate example of the conversational workflow in use.
 
-## Evaluation evidence
+**Validation status, 2026-09-13:** the current export contains 49 nodes. The handover describes the earlier 48-node checkpoint. Running the existing chat validator against today's export fails with `Chat Trigger webhookId must not be published.` The export also contains renamed nodes relative to the validator's expected names. The saved passing result applies to the earlier checkpoint; the current export has not passed that validator, and no new live execution was performed for this README update.
 
-The evaluation separates navigation from answer quality. A generated answer is judged only after its ordered n8n tool trace reaches appropriate canonical pages with usable provenance.
+To reproduce the current static check from the repository root:
 
-| Case | Observed retrieval route | Result |
-|---|---|---|
-| Direct: why chunking matters in RAG | `index.md` → `concepts/chunking.md` → two linked source pages | Passed |
-| Synthesis: chunking and knowledge bases | `index.md` → both canonical concept pages → two linked source pages | Passed |
-| Two-clause boundary: RAG usefulness and chunking | indexes → `concepts/rag.md` + `concepts/chunking.md` → two sources | Passed |
-| Literal fallback: “dumb zone” | `index.md` → one `find_kb_pages` call → `concepts/context-rot.md` → linked source | Passed |
-| Unsupported Kubernetes question | `index.md` → one literal search → terminal `no_match` → explicit refusal | Passed |
-| Gemini 3.5 Flash regression | direct chunking case repeated after fallback changes | Passed |
+```bash
+node scripts/validate-chat-antigravity.mjs
+```
 
-The cases and exact routes are documented in [Evaluation](docs/evaluation.md). This is a small, manually reviewed test set—not an automated benchmark or proof of complete KB recall. The repository’s automated check validates the workflow artifacts only.
+This checks the artifact, not live provider behavior or answer quality. Reconciling the export and validator remains a separate maintenance task.
 
-## Failure-driven engineering
+## What changed during development
 
-### Plausible answer, phantom citations
+### Agentic retrieval: plausible prose with unread citations
 
-In the first successful direct retrieval run, Miranda listed five source paths that appeared as links inside pages but had never been opened through the tool. The answer looked credible, but its execution trace did not support those citations. The grounding contract was changed to require a successful-read ledger, a direct linked source-page read, and a final citation audit. The retry followed a four-read route and cited only pages actually returned by `read_kb_page`.
+The earlier Gemini agent navigated the KB through `read_kb_page` and `find_kb_pages`. In an initial direct run, it listed five source paths that appeared as links but had never been opened. The execution trace exposed the mismatch. I required a successful-read ledger, a linked source-page read, and a final citation audit; the retry cited only pages returned by the tool.
 
-### Prompt-only fallback limit was insufficient
+For an unsupported question, a prompt-only one-search limit also proved insufficient: the agent broadened the query and searched twice. Returning structured `no_match`, `terminal: true`, and an explicit insufficient-evidence next action produced the intended stop in the recorded retry. These remain observed model-followed outcomes, not a deterministic final-answer guarantee. See [the historical evaluation](docs/evaluation.md).
 
-For an unsupported Kubernetes question, Gemini correctly refused to invent an answer but repeatedly broadened the literal query and called the fallback twice, despite an explicit one-search prompt rule. Prompt clarification did not fix the behavior reliably. The tool protocol was therefore changed: zero candidates now return `status: no_match`, `terminal: true`, and an explicit insufficient-evidence next action. Gemini 3.5 Flash then stopped after one search and declined the question without an unsupported claim.
+### Deterministic evidence packets, then conversation
 
-A separate rate-limit incident also showed that a user turn with several tool calls creates several provider requests. An unnecessary retrieval detour was removed through prompt economy rather than by reducing the iteration ceiling below the routes required by the evaluation cases.
+I next compared agentic navigation with deterministic retrieval followed by one answer call. The isolated [one-question pilot](docs/one-call-pilot.md) recorded 2,246 versus 26,957 total tokens for its fixed comparison. That result belongs to the historical pilot, not the current two-request chat design, and does not establish general savings.
 
-## Model-portability experiment
+The [generalized retrieval experiment](docs/generalized-one-call.md) extended selection across the KB's canonical indexes. The conversational version then added explicit question resolution and bounded session memory while preserving fresh retrieval for each answer.
 
-A local Qwen3 8B model connected through n8n’s Ollama node and could invoke tools, but it did not pass the same behavioral contract. It skipped linked-source and fallback obligations, summarized index pages, omitted canonical citations, and expanded beyond retrieved evidence. Its lower call count represented incomplete work rather than demonstrated efficiency. Gemini 3.5 Flash remains the accepted baseline; the Qwen workflow is intentionally not included here.
+### Artifact map
 
-## Planned one-call measurement
+| Artifact | Purpose |
+|---|---|
+| [`miranda-chat-antigravity.json`](workflows/miranda-chat-antigravity.json) | Current conversational demonstration |
+| [`miranda-chat-gemini-multi-call.json`](workflows/miranda-chat-gemini-multi-call.json) and [`kb-navigation.json`](workflows/kb-navigation.json) | Earlier agentic retrieval architecture |
+| [`miranda-one-call-pilot.json`](workflows/miranda-one-call-pilot.json) | Isolated fixed-question measurement |
+| [`miranda-one-call-generalized.json`](workflows/miranda-one-call-generalized.json) | Frozen stateless Antigravity comparison baseline |
+| [`miranda-one-call-gemini.json`](workflows/miranda-one-call-gemini.json) | Frozen Gemini comparison copy |
+| [`n8n-memory-probe.json`](workflows/n8n-memory-probe.json) | Memory diagnostic, not a runtime dependency |
 
-The [one-call evidence-packet pilot](docs/one-call-pilot.md) specifies an
-isolated, one-question comparison between accepted Miranda and a deterministic
-bounded evidence packet followed by one Gemini answer call. The inactive
-artifact is `workflows/miranda-one-call-pilot.json`. Its single live Q4 run
-passed answer quality, grounding, and provenance with one Gemini action,
-2,246 total tokens, and a 30.539-second duration, versus five actions and
-26,957 tokens for the accepted control. This question-specific result does not
-establish a general retrieval replacement. The accepted workflow artifacts
-are unchanged.
+Older Gemini setup and evaluation documents describe historical configurations. In particular, Gemini-oriented documentation and validators for the generalized experiment were retained after its provider changed; they are not current chat setup instructions.
 
-The follow-up [generalized one-call experiment](docs/generalized-one-call.md)
-is available as `workflows/miranda-one-call-generalized.json`. It scores the
-KB's existing canonical indexes deterministically, uses one scoped literal
-fallback only when needed, reads linked source evidence, and builds one
-bounded packet before Gemini. Static validation, local packet construction,
-and the initial five-case live n8n gate all pass. The four supported runs each
-used one Gemini action; the unsupported control returned terminal `no_match`
-without a model call. This remains a separate inactive experiment rather than
-a replacement for the accepted agentic workflows.
+## Run the conversational workflow locally
 
-## Run locally
+The recorded test environment was Docker-hosted n8n 2.26.4. This is the tested version, not a claim about current n8n or provider compatibility.
 
-The tested target was Docker-hosted n8n 2.26.4. The public exports intentionally contain no Gemini credential and no instance-specific binding between the chat tools and supporting workflow.
+1. Obtain the external Cole Medin KB at the revision documented in [Third-party material](THIRD_PARTY.md), under `knowledge/cole-medin-knowledge-base/`.
+2. Mount this repository read-only at `/home/node/.n8n-files/Uranus` in the n8n container. The configured KB root is `/home/node/.n8n-files/Uranus/knowledge/cole-medin-knowledge-base`.
+3. Import [`miranda-chat-antigravity.json`](workflows/miranda-chat-antigravity.json) and inspect node compatibility and the validation caveat above. It is an inactive proof-of-concept export.
+4. Bind your local HTTP Header Auth credential in both `Resolve conversational question` and `Run Antigravity answer`. Verify the configured preview API and agent are available for your environment; the export's credential references do not supply an API key.
+5. Use the Chat Trigger test interface. Run the three-turn conversation and separate-session pronoun test, inspecting the loaded history, selected paths, evidence packet, and final response.
 
-At a high level:
-
-1. Obtain the external Cole Medin knowledge-base dependency at the tested revision.
-2. Mount this repository read-only at `/home/node/.n8n-files/Uranus` in the n8n container.
-3. Import `kb-navigation.json`, then `miranda-chat-gemini.json`.
-4. Select the imported `kb-navigation` workflow in both tool nodes.
-5. Select a local n8n Gemini credential and confirm `models/gemini-3.5-flash`.
-6. Activate only the supporting workflow while Miranda calls it, then run the documented controls.
-
-See [Local setup](docs/setup.md) for the complete procedure. Never place API keys, the n8n encryption key, runtime database, or execution history in this repository.
+The conversational workflow reads the KB directly; it does not require the earlier `kb-navigation` subworkflow. The [handover](docs/antigravity-chat-handover.md) explains memory inspection and the recorded runtime behavior. Provider availability and compatibility have not been rechecked for this documentation update.
 
 ## Limitations
 
-- This is a tested proof of concept, not a production deployment, n8n core feature, text-to-workflow system, or B2B SaaS product.
-- Behavioral evaluation is manual and covers a small scenario set.
-- There are no embeddings, vector store, semantic reranking, or chunk-level retrieval.
-- The external KB is required but not distributed here.
-- Literal fallback scans 689 approved Markdown pages at the tested KB snapshot; it is appropriate for this local corpus, not a demonstrated scalable search service.
-- The read ledger and citation audit are model-followed instructions, not deterministic output post-processing.
-- There is no conversational memory, automatic provider retry, failover, or credential rotation.
-- The system has not been load-tested or designed for multi-tenant operation.
-- Imports require local credential selection and supporting-workflow rebinding.
-- Qwen3 8B did not satisfy the accepted Gemini retrieval and provenance contract.
-- The generalized one-call workflow passed its initial five-case live gate but
-  remains experimental; the small lexical test set does not establish broad
-  semantic recall or production scalability.
+- Personal proof of concept; no production deployment, multi-tenant design, or load testing.
+- Small manual evaluation set; no automated live conversational regression suite or deterministic claim/citation verifier.
+- In-process, single-instance memory. Persistence across restarts, re-imports, queue mode, or multiple workers must not be assumed.
+- Browser-visible older chat may outlive server-side memory; inspect the session history in the execution trace.
+- Non-vector retrieval with lexical matching; no demonstrated broad semantic recall or scalable search service.
+- External KB required and not bundled. Provider preview availability and credentials are environment-dependent.
+- No automatic provider retry, failover, or credential rotation.
+- The current export and historical static validator need reconciliation as described above.
 
 ## Ownership and AI assistance
 
-I designed the architecture and evaluation criteria, operated and tested the system, and used AI coding agents extensively to implement and iterate it.
+I designed the architecture and evaluation criteria, operated and tested the system, and used AI coding agents extensively for implementation and iteration. I reviewed execution traces, challenged unsupported citations and repeated fallback searches, and evaluated whether changes preserved evidence quality.
 
-The runtime model dynamically chose retrieval steps and generated answers within the configured tool and prompt policy. I judged those choices from n8n execution traces and rejected outputs when their evidence was insufficient—including the plausible answer whose listed citations had not actually been retrieved.
-
-## Third-party knowledge base
-
-The Cole Medin knowledge base is an external dependency and is not bundled or relicensed by this project. Its tested source revision and separation from this repository are documented in [Third-party material](THIRD_PARTY.md).
-
-## Artifact validation
-
-Run:
-
-```bash
-node scripts/validate-workflows.mjs
-```
-
-This checks JSON structure, accepted topology, behavioral-field hashes, model selection, inactive/unpinned state, and sanitation. It does not call an LLM or evaluate generated answers.
+The source KB is an external dependency, not my authored content. Its revision, attribution, and separation from this repository are documented in [Third-party material](THIRD_PARTY.md).
