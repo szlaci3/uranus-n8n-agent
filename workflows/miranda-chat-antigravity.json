@@ -595,7 +595,7 @@
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "application/json",
-        "body": "={{ JSON.stringify({ agent: 'antigravity-preview-05-2026', input: $json.model_prompt, environment: 'remote', tools: [], agent_config: { type: 'antigravity', max_total_tokens: 20000 } }) }}",
+        "body": "={{ JSON.stringify({ agent: 'antigravity-preview-05-2026', input: $json.model_prompt, environment: 'remote', tools: [], agent_config: { type: 'antigravity', 'model': 'gemini-3.7-flash', max_total_tokens: 20000 } }) }}",
         "options": {
           "timeout": 300000
         }
@@ -645,8 +645,7 @@
     {
       "parameters": {
         "options": {
-          "responseMode": "lastNode",
-          "loadPreviousSession": "memory"
+          "responseMode": "lastNode"
         }
       },
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
@@ -731,7 +730,7 @@
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "application/json",
-        "body": "={{ JSON.stringify({ agent: 'antigravity-preview-05-2026', input: $json.resolver_prompt, environment: 'remote', tools: [], agent_config: { type: 'antigravity', max_total_tokens: 12000 } }) }}",
+        "body": "={{ JSON.stringify({ agent: 'antigravity-preview-05-2026', input: $json.resolver_prompt, environment: 'remote', tools: [], agent_config: { type: 'antigravity', 'model': 'gemini-3.7-flash', max_total_tokens: 12000 } }) }}",
         "options": {
           "timeout": 180000
         }
@@ -1389,11 +1388,6 @@
     "Conversation Simple Memory": {
       "ai_memory": [
         [
-          {
-            "node": "When chat message received",
-            "type": "ai_memory",
-            "index": 0
-          },
           {
             "node": "Load prior session messages",
             "type": "ai_memory",

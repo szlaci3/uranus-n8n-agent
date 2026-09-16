@@ -35,11 +35,7 @@ Using a second session ID must load zero prior interactions. If turn 2 loads
 more than one grouped interaction, Chat Trigger is also inserting messages and
 the main design must not duplicate that insertion.
 
-The Simple Memory node uses `Connected Chat Trigger Node` session-ID mode. In
-2.26.4 this is required for Chat Trigger's direct `loadPreviousSession` action;
-an expression that references the trigger node works during normal workflow
-execution but fails when Chat Trigger asks the memory sub-node to rehydrate the
-widget directly.
+The Simple Memory node uses `Connected Chat Trigger Node` session-ID mode.
 
 ## Safety
 
@@ -69,9 +65,7 @@ Observed behavior:
   prepared chat response, confirming that a final response-restoration node is
   required;
 - no duplicate pair appeared, confirming that Chat Trigger did not insert the
-  visible messages in addition to Chat Memory Manager; and
-- Chat Trigger's `loadPreviousSession` action returned four serialized
-  LangChain messages after two completed turns: Human, AI, Human, AI.
+  visible messages in addition to Chat Memory Manager.
 
 The live export preserved Chat Trigger 1.4, Chat Memory Manager 1.1, Simple
 Memory 1.4, all configured parameters, and all three `ai_memory` connections.

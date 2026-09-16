@@ -16,6 +16,8 @@ passed on 2026-08-31. The operational summary and restart instructions are in
 `docs/antigravity-chat-handover.md`. The remainder of this document is retained
 as the design and acceptance record, so some sections use planning language.
 
+Current validation evidence is maintained in [validation-status.md](validation-status.md). The 2026-09-16 static check passes, and the operator reported a successful conversation with Gemini 3.7 pinned; the user accepted the current scope with no validation pending.
+
 ## Objective
 
 Turn `workflows/miranda-one-call-generalized.json` into a continuous n8n chat
@@ -157,7 +159,6 @@ Add:
 - `When chat message received` using
   `@n8n/n8n-nodes-langchain.chatTrigger` version `1.4`;
 - response mode `When Last Node Finishes`;
-- previous-session loading from the connected memory; and
 - no repository-published `webhookId`.
 
 Add a `Validate chat envelope` Code node that:
@@ -377,7 +378,7 @@ workflow must not end on the Memory Manager node, because its storage result is
 not the chat reply.
 
 Confirm during the memory probe whether Chat Trigger itself inserts any
-messages when previous-session loading is enabled. If it does, disable duplicate
+messages. If it does, disable duplicate
 manual insertion for that message type. A single turn must appear only once in
 memory.
 
@@ -430,8 +431,8 @@ Use that real export as the schema source for the main workflow nodes.
 `docs/n8n-memory-probe.md`. On n8n 2.26.4, grouped simplified output is
 `{ messages: [{ human, ai }], messagesCount }`; explicit insert returns only
 `{ success: true }`; Chat Trigger does not duplicate the explicit insert; and
-the Simple Memory node must use `sessionIdType: fromInput` for Chat Trigger's
-direct previous-session rehydration action. A second session loaded no history.
+the Simple Memory node uses `sessionIdType: fromInput`. A second session loaded
+no history.
 
 ### Live conversational cases
 

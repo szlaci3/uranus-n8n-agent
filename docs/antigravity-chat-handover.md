@@ -4,7 +4,11 @@
 **Validated repository checkpoint:** `93b223c` (`Continuous chat with Antigravity`)  
 **Runtime used for live testing:** Docker-hosted n8n 2.26.4
 
-## Current status
+## Current validation update — 2026-09-16
+
+The current export has 49 nodes and passes static validation. Both Antigravity requests pin Gemini 3.7. The operator reported successful direct and contextual follow-up answers. See [validation-status.md](validation-status.md) for the current evidence and known limits. The user accepted the current scope; no validation remains pending.
+
+## Historical handover status — 2026-08-31
 
 The Antigravity continuous-chat work is complete at its current proof-of-concept
 scope. The authoritative artifact is the inactive export:
@@ -40,7 +44,7 @@ intentionally left unchanged. The Antigravity chat has its own validator:
 node scripts/validate-chat-antigravity.mjs
 ```
 
-Expected result:
+Recorded result at the historical checkpoint:
 
 ```text
 Antigravity chat workflow validation passed (48 nodes).

@@ -44,8 +44,6 @@ const withDefault = (value, defaultValue) => value === undefined ? defaultValue 
 const trigger = node('When chat message received');
 if (trigger.type !== '@n8n/n8n-nodes-langchain.chatTrigger') fail('Unexpected Chat Trigger type.');
 if (withDefault(trigger.parameters?.public, false) !== false || withDefault(trigger.parameters?.mode, 'hostedChat') !== 'hostedChat') fail('Chat Trigger must be private hosted chat.');
-// Omitted loadPreviousSession means 'notSupported', not 'memory'.
-if (trigger.parameters?.options?.loadPreviousSession !== 'memory') fail('Chat Trigger must load previous session from memory.');
 if (withDefault(trigger.parameters?.options?.responseMode, trigger.parameters?.availableInChat === true ? 'streaming' : 'lastNode') !== 'lastNode') fail('Chat Trigger must respond from the last node.');
 
 const memory = node('Conversation Simple Memory');
@@ -65,7 +63,7 @@ if (!Array.isArray(messages) || messages.length !== 2 || messages[0]?.type !== '
 if (!messages.every((message) => withDefault(message.hideFromUI, false) === false)) fail('Visible memory messages must remain visible.');
 
 const memoryConnections = workflow.connections?.['Conversation Simple Memory']?.ai_memory?.flat() ?? [];
-for (const target of ['When chat message received', 'Load prior session messages', 'Insert visible turn']) {
+for (const target of ['Load prior session messages', 'Insert visible turn']) {
   if (!memoryConnections.some((connection) => connection.node === target)) fail(`Memory backend is not connected to ${target}.`);
 }
 

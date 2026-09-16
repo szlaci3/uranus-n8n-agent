@@ -58,7 +58,7 @@ The [chat handover](docs/antigravity-chat-handover.md) records operator-run test
 
 These are a small, manually reviewed set, not an automated answer-quality benchmark. The later accepted demonstration provides a separate example of the conversational workflow in use.
 
-**Validation status, 2026-09-15:** the current export passes the chat validator: `Antigravity chat workflow validation passed (49 nodes).` The validator now accounts for omitted n8n defaults and renamed nodes. The export explicitly sets Chat Trigger `options.loadPreviousSession` to `memory` and connects `Conversation Simple Memory` to the trigger as well as the history load/store nodes. The handover describes the earlier 48-node checkpoint; no new live execution was performed for this fix.
+**Validation status, 2026-09-16:** the current export passes the chat validator: `Antigravity chat workflow validation passed (49 nodes).` The validator now accounts for omitted n8n defaults and renamed nodes. Both requests now pin `gemini-3.7-flash`. The operator also reported a successful chunking question and contextual costs follow-up. See the [current validation record](docs/validation-status.md) for passed checks and known limits. The user accepted the current scope; no validation remains pending. The handover preserves the earlier 48-node checkpoint.
 
 To reproduce the current static check from the repository root:
 
@@ -66,7 +66,7 @@ To reproduce the current static check from the repository root:
 node scripts/validate-chat-antigravity.mjs
 ```
 
-This checks the artifact, not live provider behavior or answer quality. After importing the corrected export, verify previous-session loading and separate-session isolation in n8n.
+This checks the artifact, not live provider behavior or answer quality.
 
 ## What changed during development
 
@@ -101,11 +101,11 @@ The recorded test environment was Docker-hosted n8n 2.26.4. This is the tested v
 
 1. Obtain the external Cole Medin KB at the revision documented in [Third-party material](THIRD_PARTY.md), under `knowledge/cole-medin-knowledge-base/`.
 2. Mount this repository read-only at `/home/node/.n8n-files/Uranus` in the n8n container. The configured KB root is `/home/node/.n8n-files/Uranus/knowledge/cole-medin-knowledge-base`.
-3. Import [`miranda-chat-antigravity.json`](workflows/miranda-chat-antigravity.json) and inspect node compatibility and the validation caveat above. It is an inactive proof-of-concept export.
+3. Import [`miranda-chat-antigravity.json`](workflows/miranda-chat-antigravity.json) and inspect node compatibility and the validation status above. It is an inactive proof-of-concept export.
 4. Bind your local HTTP Header Auth credential in both `Resolve conversational question` and `Run Antigravity answer`. Verify the configured preview API and agent are available for your environment; the export's credential references do not supply an API key.
 5. Use the Chat Trigger test interface. Run the three-turn conversation and separate-session pronoun test, inspecting the loaded history, selected paths, evidence packet, and final response.
 
-The conversational workflow reads the KB directly; it does not require the earlier `kb-navigation` subworkflow. The [handover](docs/antigravity-chat-handover.md) explains memory inspection and the recorded runtime behavior. Provider availability and compatibility have not been rechecked for this documentation update.
+The conversational workflow reads the KB directly; it does not require the earlier `kb-navigation` subworkflow. The [handover](docs/antigravity-chat-handover.md) explains memory inspection and the recorded runtime behavior. The operator reported successful live answers after pinning Gemini 3.7; the current proof-of-concept validation is accepted with no checks pending.
 
 ## Limitations
 
@@ -116,7 +116,6 @@ The conversational workflow reads the KB directly; it does not require the earli
 - Non-vector retrieval with lexical matching; no demonstrated broad semantic recall or scalable search service.
 - External KB required and not bundled. Provider preview availability and credentials are environment-dependent.
 - No automatic provider retry, failover, or credential rotation.
-- The corrected previous-session loading configuration passes static validation; live session restoration has not been rechecked.
 
 ## Ownership and AI assistance
 
