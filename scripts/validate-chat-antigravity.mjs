@@ -37,27 +37,32 @@ for (const forbidden of ['Manual test — set question', 'Why does chunking matt
   if (JSON.stringify(workflow).toLowerCase().includes(forbidden.toLowerCase())) fail(`Hard-coded evaluation data found: ${forbidden}`);
 }
 
+// n8n exports may omit default-valued parameters. Only undefined uses the
+// default; explicit nulls and incorrect values must still fail validation.
+const withDefault = (value, defaultValue) => value === undefined ? defaultValue : value;
+
 const trigger = node('When chat message received');
 if (trigger.type !== '@n8n/n8n-nodes-langchain.chatTrigger') fail('Unexpected Chat Trigger type.');
-if (trigger.parameters?.public !== false || trigger.parameters?.mode !== 'hostedChat') fail('Chat Trigger must be private hosted chat.');
+if (withDefault(trigger.parameters?.public, false) !== false || withDefault(trigger.parameters?.mode, 'hostedChat') !== 'hostedChat') fail('Chat Trigger must be private hosted chat.');
+// Omitted loadPreviousSession means 'notSupported', not 'memory'.
 if (trigger.parameters?.options?.loadPreviousSession !== 'memory') fail('Chat Trigger must load previous session from memory.');
-if (trigger.parameters?.options?.responseMode !== 'lastNode') fail('Chat Trigger must respond from the last node.');
+if (withDefault(trigger.parameters?.options?.responseMode, trigger.parameters?.availableInChat === true ? 'streaming' : 'lastNode') !== 'lastNode') fail('Chat Trigger must respond from the last node.');
 
 const memory = node('Conversation Simple Memory');
 if (memory.type !== '@n8n/n8n-nodes-langchain.memoryBufferWindow') fail('Unexpected memory backend type.');
-if (memory.parameters?.sessionIdType !== 'fromInput') fail('Memory must use the incoming sessionId.');
-if (!String(memory.parameters?.sessionKey ?? '').includes('sessionId')) fail('Memory session key must use sessionId.');
+if (withDefault(memory.parameters?.sessionIdType, 'fromInput') !== 'fromInput') fail('Memory must use the incoming sessionId.');
+if (!String(withDefault(memory.parameters?.sessionKey, '={{ $json.sessionId }}')).includes('sessionId')) fail('Memory session key must use sessionId.');
 if (memory.parameters?.contextWindowLength !== 8) fail('Memory backend window must be eight exchanges.');
 
 const load = node('Load prior session messages');
-if (load.parameters?.mode !== 'load' || load.parameters?.simplifyOutput !== true || load.parameters?.options?.groupMessages !== true) {
+if (withDefault(load.parameters?.mode, 'load') !== 'load' || withDefault(load.parameters?.simplifyOutput, true) !== true || load.parameters?.options?.groupMessages !== true) {
   fail('History load must use simplified grouped output.');
 }
 const insert = node('Insert visible turn');
-if (insert.parameters?.mode !== 'insert' || insert.parameters?.insertMode !== 'insert') fail('Visible-turn memory write must be an insert operation.');
+if (insert.parameters?.mode !== 'insert' || withDefault(insert.parameters?.insertMode, 'insert') !== 'insert') fail('Visible-turn memory write must be an insert operation.');
 const messages = insert.parameters?.messages?.messageValues;
 if (!Array.isArray(messages) || messages.length !== 2 || messages[0]?.type !== 'user' || messages[1]?.type !== 'ai') fail('Exactly one visible user/assistant pair must be inserted.');
-if (!messages.every((message) => message.hideFromUI === false)) fail('Visible memory messages must remain visible.');
+if (!messages.every((message) => withDefault(message.hideFromUI, false) === false)) fail('Visible memory messages must remain visible.');
 
 const memoryConnections = workflow.connections?.['Conversation Simple Memory']?.ai_memory?.flat() ?? [];
 for (const target of ['When chat message received', 'Load prior session messages', 'Insert visible turn']) {
@@ -69,9 +74,9 @@ const requiredCodeNodes = [
   'Build contextualizer request',
   'Validate resolved conversational question',
   'Validate Antigravity answer',
-  'Return generalized answer and measurements',
+  'Return generalized answer',
   'Return structured generalized error',
-  'Return terminal no_match without Antigravity',
+  'Return terminal no_match',
   'Normalize chat response',
   'Return chat response',
 ];
@@ -98,7 +103,7 @@ if (!String(switchNode.parameters?.output ?? '').includes('resolved: 0') || !Str
 
 const normalizeTargets = workflow.connections?.['Normalize chat response']?.main?.flat() ?? [];
 if (!normalizeTargets.some((connection) => connection.node === 'Store visible turn?')) fail('Visible responses must pass through the storage gate.');
-const terminalNames = ['Return generalized answer and measurements', 'Return terminal no_match without Antigravity', 'Return structured generalized error', 'Return clarification', 'Return help', 'Return resolver error'];
+const terminalNames = ['Return generalized answer', 'Return terminal no_match', 'Return structured generalized error', 'Return clarification', 'Return help', 'Return resolver error'];
 for (const name of terminalNames) {
   const targets = workflow.connections?.[name]?.main?.flat() ?? [];
   if (!targets.some((connection) => connection.node === 'Normalize chat response')) fail(`${name} does not reach response normalization.`);

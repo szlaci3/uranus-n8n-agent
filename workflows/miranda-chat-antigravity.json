@@ -645,7 +645,8 @@
     {
       "parameters": {
         "options": {
-          "responseMode": "lastNode"
+          "responseMode": "lastNode",
+          "loadPreviousSession": "memory"
         }
       },
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
@@ -1388,6 +1389,11 @@
     "Conversation Simple Memory": {
       "ai_memory": [
         [
+          {
+            "node": "When chat message received",
+            "type": "ai_memory",
+            "index": 0
+          },
           {
             "node": "Load prior session messages",
             "type": "ai_memory",

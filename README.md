@@ -58,7 +58,7 @@ The [chat handover](docs/antigravity-chat-handover.md) records operator-run test
 
 These are a small, manually reviewed set, not an automated answer-quality benchmark. The later accepted demonstration provides a separate example of the conversational workflow in use.
 
-**Validation status, 2026-09-13:** the current export contains 49 nodes. The handover describes the earlier 48-node checkpoint. Running the existing chat validator against today's export fails with `Chat Trigger webhookId must not be published.` The export also contains renamed nodes relative to the validator's expected names. The saved passing result applies to the earlier checkpoint; the current export has not passed that validator, and no new live execution was performed for this README update.
+**Validation status, 2026-09-15:** the current export passes the chat validator: `Antigravity chat workflow validation passed (49 nodes).` The validator now accounts for omitted n8n defaults and renamed nodes. The export explicitly sets Chat Trigger `options.loadPreviousSession` to `memory` and connects `Conversation Simple Memory` to the trigger as well as the history load/store nodes. The handover describes the earlier 48-node checkpoint; no new live execution was performed for this fix.
 
 To reproduce the current static check from the repository root:
 
@@ -66,7 +66,7 @@ To reproduce the current static check from the repository root:
 node scripts/validate-chat-antigravity.mjs
 ```
 
-This checks the artifact, not live provider behavior or answer quality. Reconciling the export and validator remains a separate maintenance task.
+This checks the artifact, not live provider behavior or answer quality. After importing the corrected export, verify previous-session loading and separate-session isolation in n8n.
 
 ## What changed during development
 
@@ -116,7 +116,7 @@ The conversational workflow reads the KB directly; it does not require the earli
 - Non-vector retrieval with lexical matching; no demonstrated broad semantic recall or scalable search service.
 - External KB required and not bundled. Provider preview availability and credentials are environment-dependent.
 - No automatic provider retry, failover, or credential rotation.
-- The current export and historical static validator need reconciliation as described above.
+- The corrected previous-session loading configuration passes static validation; live session restoration has not been rechecked.
 
 ## Ownership and AI assistance
 
